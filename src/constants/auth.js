@@ -14,7 +14,7 @@ export const AUTH_CONSTANTS = {
     'brianfloresxxd@gmail.com'
   ],
   API_BASE_URL: BACKEND_URL,
-  GOOGLE_CLIENT_ID: '217386513987-f2uhmkqcb8stdrr04ona8jioh0tgs2j2.apps.googleusercontent.com',
+  GOOGLE_CLIENT_ID: '886510955429-fhmlsaufc5j85uhbuk1gb1skcsp89632.apps.googleusercontent.com',
   STORAGE_KEYS: {
     JWT_TOKEN: 'jwtToken',
     USER_DATA: 'currentUser',

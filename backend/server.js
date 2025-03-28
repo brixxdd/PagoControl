@@ -64,7 +64,7 @@ app.use(cookieParser());
 app.use(cors({
   origin: [
     process.env.FRONTEND_URL,
-    'https://control-proyectores-unach.vercel.app',
+    'https://pago-control.vercel.app',
     'http://localhost:3001'
   ],
   credentials: true,
