@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { FaGoogle } from 'react-icons/fa';
 import { useTheme } from '../contexts/ThemeContext';
 import { getCurrentThemeStyles } from '../themes/themeConfig';
@@ -10,8 +10,9 @@ import { authService } from '../services/authService';
 
 const SignIn = () => {
   const { handleGoogleLogin, isAuthenticated, isAdmin } = useAuth();
-  const { currentTheme, darkMode, toggleDarkMode } = useTheme();
+  const { currentTheme, darkMode } = useTheme();
   const themeStyles = getCurrentThemeStyles(currentTheme || 'default');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadInitialTheme = async () => {
@@ -29,7 +30,25 @@ const SignIn = () => {
     loadInitialTheme();
   }, []);
 
+  useEffect(() => {
+    const currentUser = authService.getCurrentUser();
+    
+    if (currentUser) {
+      if (!currentUser.registroCompleto) {
+        navigate('/register');
+      } else if (currentUser.isAdmin) {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    }
+  }, [navigate]);
+
   if (isAuthenticated) {
+    const user = authService.getCurrentUser();
+    if (!user.numeroContacto || !user.direccion || !user.numeroEmergencia) {
+      return <Navigate to="/register" replace />;
+    }
     return <Navigate to={isAdmin ? "/admin-dashboard" : "/dashboard"} replace />;
   }
 

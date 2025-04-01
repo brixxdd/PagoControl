@@ -98,12 +98,12 @@ class AuthService {
   }
 
   getAuthHeaderWithRefreshToken() {
-      const token = sessionStorage.getItem(AUTH_CONFIG.STORAGE_KEYS.JWT_REFRESH_TOKEN);
-      if (!token) {
-          throw new Error('No refresh token found in session storage');
-      }
-
-      return { Authorization: `Bearer ${token}` };
+    const token = sessionStorage.getItem(AUTH_CONSTANTS.STORAGE_KEYS.JWT_REFRESH_TOKEN);
+    if (!token) {
+      // En lugar de lanzar error, devolver null o un objeto vacío
+      return {};
+    }
+    return { Authorization: `Bearer ${token}` };
   }
 
   async login(googleCredential, userPicture) {
@@ -117,8 +117,17 @@ class AuthService {
         throw new Error('No se recibió token del servidor');
       }
 
+      // Guardar datos de autenticación
       this._handleAuthResponse(response.data);
-      return response.data;
+      
+      // Verificar si el usuario necesita completar registro
+      const tutor = response.data.user;
+      const needsRegistration = !tutor.registroCompleto;
+
+      return {
+        ...response.data,
+        needsRegistration
+      };
     } catch (error) {
       console.error('Error detallado en login:', error.response?.data || error.message);
       throw this._handleError(error);
@@ -128,20 +137,26 @@ class AuthService {
   async checkSession() {
     try {
       const token = this.getStoredToken();
-      console.log('Token recuperado:', token);
       if (!token) {
         console.log('check session - no token - authServices')
         return { authenticated: false };
       }
 
       this.setAuthHeader(token);
-      console.log('check session - authServices')
       const response = await this.api.get('/check-session');
       
-      // Verificar que los datos del usuario estén completos
-      console.log("Respuesta completa de check-session:", response.data);
+      // Verificar que los datos del tutor estén completos
+      const tutor = response.data.user;
+      const datosCompletos = tutor && 
+                           tutor.numeroContacto && 
+                           tutor.direccion && 
+                           tutor.numeroEmergencia;
       
-      return { ...response.data, authenticated: true };
+      return { 
+        ...response.data, 
+        authenticated: true,
+        datosCompletos
+      };
     } catch (error) {
       console.error("Error en checkSession:", error);
       return { authenticated: false, error };
@@ -161,7 +176,7 @@ class AuthService {
     try {
       const token = this.getStoredToken();
       this.setAuthHeader(token);
-      const response = await this.api.put('/update-user', data);
+      const response = await this.api.put('/tutores/update', data);
       return response.data;
     } catch (error) {
       throw this._handleError(error);
@@ -231,11 +246,15 @@ class AuthService {
   // Agregar método para renovar token
   async refreshToken() {
     try {
-        const headers = this.getAuthHeaderWithRefreshToken(); // Obtiene los encabezados
-        return this.api.post('/refresh-token', {}, { headers }); // Usa los encabezados en esta solicitud
+      const headers = this.getAuthHeaderWithRefreshToken();
+      // Si no hay refresh token, no intentar renovar
+      if (!Object.keys(headers).length) {
+        return null;
+      }
+      return await this.api.post('/refresh-token', {}, { headers });
     } catch (error) {
-        console.error('Error al obtener el refresh token:', error);
-        throw error;
+      console.error('Error al renovar token:', error);
+      return null;
     }
   }
 
@@ -260,6 +279,23 @@ class AuthService {
       console.error('Error al cargar la lista de administradores:', error);
       // Si falla, se usa la lista predeterminada
     }
+  }
+
+  getCurrentUser() {
+    try {
+      const userStr = sessionStorage.getItem(AUTH_CONFIG.STORAGE_KEYS.USER_DATA);
+      if (!userStr) return null;
+      return JSON.parse(userStr);
+    } catch (error) {
+      console.error('Error al obtener usuario actual:', error);
+      return null;
+    }
+  }
+
+  // También agregar este método para verificar si el usuario necesita completar registro
+  needsRegistration() {
+    const user = this.getCurrentUser();
+    return user && !user.registroCompleto;
   }
 }
 

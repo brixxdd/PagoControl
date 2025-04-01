@@ -1,27 +1,17 @@
 import React from 'react';
-import { useAuth } from '../hooks/useAuth';
-import GradeGroupModal from './GradeGroupModal';
 import { Navigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 const AuthenticationWrapper = ({ children }) => {
-  const { isAuthenticated, isAdmin, needsProfileCompletion } = useAuth();
+  const { isAuthenticated, isAdmin, user } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/signin" replace />;
   }
 
-  if (isAdmin) {
-    return children;
-  }
-
-  if (needsProfileCompletion) {
-    return (
-      <GradeGroupModal 
-        isOpen={true}
-        onClose={() => {}} // Modal no se puede cerrar
-        forceCompletion={true} // Nueva prop para forzar el completado
-      />
-    );
+  // Si el usuario está autenticado pero no ha completado el registro y no es admin
+  if (!isAdmin && user && !user.registroCompleto && window.location.pathname !== '/register') {
+    return <Navigate to="/register" replace />;
   }
 
   return children;

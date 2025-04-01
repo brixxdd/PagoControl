@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const Tutor = require('../models/Tutor');
 
 // Lista de correos administrativos autorizados
 const ADMIN_EMAILS = [
@@ -13,7 +14,7 @@ const ADMIN_EMAILS = [
   'brianfloresxxd@gmail.com'
 ];
 
-const verifyToken = (req, res, next) => {
+const verifyToken = async (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
   
   if (!token) {
@@ -22,6 +23,11 @@ const verifyToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Verificar si el tutor existe en la base de datos
+    const tutor = await Tutor.findById(decoded.id);
+    if (!tutor) {
+      return res.status(401).json({ message: 'Tutor no encontrado' });
+    }
     req.user = decoded;
     next();
   } catch (error) {

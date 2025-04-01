@@ -30,6 +30,8 @@ const cleanupFiles = require('./utils/cleanupFiles');
 const cron = require('node-cron');
 const { uploadPdf, cleanupOldFiles, verificarUrlCloudinary } = require('./services/cloudinaryService');
 const qrCodeRoutes = require('./routes/qrCodeRoutes');
+const authRoutes = require('./routes/authRoutes');
+const Tutor = require('./models/Tutor');
 
 // Lista de correos administrativos - MOVER ESTA DEFINICIÓN AL NIVEL SUPERIOR
 const ADMIN_EMAILS = [
@@ -169,19 +171,17 @@ app.post('/logout', (req, res) => {
 
 app.get('/check-session', verifyToken, async (req, res) => {
   try {
-    // Buscar el usuario en la base de datos para obtener los datos más actualizados
-    const usuario = await User.findById(req.user.id);
+    const tutor = await Tutor.findById(req.user.id);
     
-    if (!usuario) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
+    if (!tutor) {
+      return res.status(404).json({ message: 'Tutor no encontrado' });
     }
     
-    // Imprimir los datos del usuario para depuración
-    console.log('Datos del usuario enviados:', usuario);
-    
-    // Devolver todos los datos del usuario
     res.json({ 
-      user: usuario,
+      user: {
+        ...tutor.toObject(),
+        registroCompleto: Boolean(tutor.numeroContacto && tutor.direccion && tutor.numeroEmergencia)
+      },
       message: 'Sesión válida' 
     });
   } catch (error) {
@@ -208,57 +208,36 @@ app.post('/login', async (req, res) => {
     });
 
     const payload = ticket.getPayload();
-    // console.log('Google payload:', payload);
-
     if (!payload) {
       return res.status(401).json({ message: 'Payload de Google inválido' });
     }
 
     const { email, name, picture } = payload;
+    let pvez = false;
+    let tutor = await Tutor.findOne({ email });
 
-    // Lista de correos administrativos
-    const ADMIN_EMAILS = [
-      'proyectoresunach@gmail.com',
-      'fanny.cordova@unach.mx',
-      'nidia.guzman@unach.mx',
-      'deysi.gamboa@unach.mx',
-      'diocelyne.arrevillaga@unach.mx',
-      'karol.carrazco@unach.mx',
-      'karen.portillo@unach.mx',
-      'pedro.escobar@unach.mx',
-      'brianes666@gmail.com',
-      'brianfloresxxd@gmail.com',
-      'nuevo.correo@unach.mx'
-    ];
+    if (!tutor) {
+      // Crear nuevo tutor con datos básicos
+      const nombreCompleto = name.split(' ');
+      const nombre = nombreCompleto[0];
+      const apellidos = nombreCompleto.slice(1).join(' ');
 
-    if (!email.endsWith('@unach.mx') && !ADMIN_EMAILS.includes(email)) {
-      return res.status(401).json({ 
-        message: 'Solo se permiten correos institucionales (@unach.mx) o administradores autorizados' 
+      tutor = new Tutor({
+        nombre,
+        apellidos,
+        email,
+        picture,
+        isAdmin: ADMIN_EMAILS.includes(email),
+        registroCompleto: false
       });
+      await tutor.save();
+      pvez = true;
     }
-
-    let pvez = null;
-    let usuario = await User.findOne({ email });
-    if (!usuario) {
-      usuario = new User({
-        nombre: name,
-        email: email,
-        picture: picture,
-        isAdmin: ADMIN_EMAILS.includes(email)
-      });
-      await usuario.save();
-      pvez = true
-    }else{
-      if(usuario.grado === null && usuario.grupo === null && usuario.turno === null){
-        pvez = true
-      }
-    }
-
 
     const jwtToken = jwt.sign(
       { 
-        id: usuario._id,
-        email: usuario.email,
+        id: tutor._id,
+        email: tutor.email,
         isAdmin: ADMIN_EMAILS.includes(email)
       }, 
       JWT_SECRET,
@@ -266,22 +245,18 @@ app.post('/login', async (req, res) => {
     );
 
     const refreshToken = jwt.sign(
-      { id: usuario._id },
+      { id: tutor._id },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    console.log('Usuario autenticado:', {
-      email: usuario.email,
-      isAdmin: email === 'proyectoresunach@gmail.com'
-    });
-
     res.status(200).json({ 
       message: 'Login exitoso',
-      user: usuario,
+      user: tutor,
       token: jwtToken,
       refreshToken,
-      pvez
+      pvez,
+      needsRegistration: !tutor.registroCompleto
     });
 
   } catch (error) {
@@ -1196,4 +1171,5 @@ app.get('/last-theme', async (req, res) => {
   }
 });
   
-//comentar
+// Rutas de autenticación
+app.use('/auth', authRoutes);

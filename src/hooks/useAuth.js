@@ -134,18 +134,13 @@ export const useAuth = () => {
 
   const checkAuth = useCallback(async () => {
     try {
-      const response = await authService.checkSession();
-      
-      if (response.authenticated && response.user) {
-        // Verificar que los datos del usuario estén completos
-        console.log("Datos del usuario recibidos del servidor:", response.user);
-        
-        // Asegurarse de que todos los campos del usuario estén presentes
+      const currentUser = authService.getCurrentUser();
+      if (currentUser) {
         setAuthState({
           isAuthenticated: true,
-          isAdmin: response.user.email && AUTH_CONSTANTS.ADMIN_EMAILS.includes(response.user.email),
-          user: response.user,
-          userPicture: response.user.picture,
+          isAdmin: currentUser.isAdmin,
+          user: currentUser,
+          userPicture: currentUser.picture,
           isLoading: false
         });
       } else {

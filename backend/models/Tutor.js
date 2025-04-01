@@ -1,11 +1,15 @@
 const mongoose = require('mongoose');
 
-const userSchema = new mongoose.Schema({
+const tutorSchema = new mongoose.Schema({
   nombre: { type: String, required: true },
+  apellidos: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  picture: { type: String, default: null },
+  picture: { type: String },
   isAdmin: { type: Boolean, default: false },
-  pdfPath: { type: String, default: null },
+  numeroContacto: { type: String, default: '' },
+  direccion: { type: String, default: '' },
+  numeroEmergencia: { type: String, default: '' },
+  registroCompleto: { type: Boolean, default: false },
   theme: {
     type: String,
     default: 'default',
@@ -16,6 +20,4 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-
-
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('Tutor', tutorSchema); 

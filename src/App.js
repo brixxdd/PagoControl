@@ -31,6 +31,9 @@ import { alertService } from './services/alertService';
 import QRHistory from './components/QRHistory';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ThemeSelector from './components/ThemeSelector';
+import Register from './components/Register';
+import RegistroNino from './components/RegistroNino';
+import { useNavigate } from 'react-router-dom';
 
 const App = () => {
   const { 
@@ -43,9 +46,10 @@ const App = () => {
     updateUserData
   } = useAuth();
 
+  const navigate = useNavigate();
+
   useInactivityTimer(handleLogout, 10 * 60 * 1000); // 10 minutos
 
-  const [showGradeGroupModal, setShowGradeGroupModal] = React.useState(false);
   const [showWelcomeAlert, setShowWelcomeAlert] = React.useState(false);
   const [tokenTimeLeft, setTokenTimeLeft] = React.useState(15 * 60); // 15 minutos en segundos
   const [showWarning, setShowWarning] = React.useState(false);
@@ -54,7 +58,6 @@ const App = () => {
   const handleProfileUpdate = useCallback(async (data) => {
     try {
       const response = await authService.updateUserProfile(data);
-      setShowGradeGroupModal(false);
       return response;
     } catch (error) {
       console.error('Error al actualizar el perfil:', error);
@@ -63,21 +66,24 @@ const App = () => {
   }, []);
 
   React.useEffect(() => {
-    // Agregar logs para depuración
-    console.log("Estado de autenticación:", isAuthenticated);
-    console.log("Datos del usuario en el frontend:", user);
-    console.log("¿Es administrador?", isAdmin);
-    
-    // Si el usuario está autenticado pero los datos están incompletos en el frontend
     if (isAuthenticated && user) {
-      // No mostrar el modal para administradores
-      if (isAdmin) {
-        console.log("Usuario administrador - No se muestra el modal de grado/grupo");
-        setShowGradeGroupModal(false);
+      // Verificar si el usuario necesita completar el registro
+      const needsRegistration = !user.numeroContacto || 
+                              !user.direccion || 
+                              !user.numeroEmergencia;
+
+      if (needsRegistration && !isAdmin) {
+        console.log("Usuario necesita completar registro");
+        navigate('/register');
         return;
       }
+
+      // Agregar logs para depuración
+      console.log("Estado de autenticación:", isAuthenticated);
+      console.log("Datos del usuario en el frontend:", user);
+      console.log("¿Es administrador?", isAdmin);
       
-      // Verificar explícitamente si los valores son nulos, undefined o vacíos
+      // Si el usuario está autenticado pero los datos están incompletos en el frontend
       const isGradoMissing = user.grado === null || user.grado === undefined || user.grado === "";
       const isGrupoMissing = user.grupo === null || user.grupo === undefined || user.grupo === "";
       
@@ -104,15 +110,12 @@ const App = () => {
               if (userData.user && userData.user.grado && userData.user.grupo) {
                 console.log("Actualizando datos del usuario con información del servidor");
                 updateUserData(userData.user);
-                setShowGradeGroupModal(false);
               } else {
                 // No mostrar el modal para administradores incluso si los datos están incompletos
                 if (userData.user && userData.user.isAdmin) {
                   console.log("Usuario administrador (según servidor) - No se muestra el modal");
-                  setShowGradeGroupModal(false);
                 } else {
                   console.log("Los datos también están incompletos en el servidor");
-                  setShowGradeGroupModal(true);
                 }
               }
             }
@@ -122,12 +125,6 @@ const App = () => {
         };
         
         fetchUserData();
-      } else {
-        console.log("No se muestra el modal porque los datos están completos:", {
-          grado: user.grado,
-          grupo: user.grupo
-        });
-        setShowGradeGroupModal(false);
       }
     }
   }, [isAuthenticated, user, isAdmin, updateUserData]);
@@ -171,27 +168,6 @@ const App = () => {
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
-
-  // Agregar esta función para actualizar el contexto sin recargar
-  React.useEffect(() => {
-    // Función global para actualizar el contexto de autenticación
-    window.updateAuthContext = (updatedUser) => {
-      // Usar la función del contexto de autenticación para actualizar los datos
-      if (updateUserData) {
-        updateUserData(updatedUser);
-      }
-      
-      // Si el usuario ya tiene los datos completos, no mostrar el modal
-      if (updatedUser && updatedUser.grado && updatedUser.grupo) {
-        setShowGradeGroupModal(false);
-      }
-    };
-
-    return () => {
-      // Limpiar la función global al desmontar el componente
-      delete window.updateAuthContext;
-    };
-  }, [updateUserData]);
 
   // Función para manejar el escaneo exitoso
   const handleScanSuccess = (qrData) => {
@@ -242,9 +218,7 @@ const App = () => {
               {isAdmin ? (
                 <AdminSidebar />
               ) : (
-                <Sidebar 
-                  openGradeGroupModal={() => setShowGradeGroupModal(true)}
-                />
+                <Sidebar />
               )}
             </>
           )}
@@ -305,17 +279,6 @@ const App = () => {
                           </span>
                         </div>
 
-                        {/* Botón de escáner QR (solo para administradores) */}
-                        {isAdmin && (
-                          <button
-                            onClick={() => setShowScanner(true)}
-                            className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
-                            title="Escanear QR"
-                          >
-                            <Camera size={20} />
-                          </button>
-                        )}
-
                         {/* Notificaciones */}
                         <NotificationsDropdown />
 
@@ -357,12 +320,38 @@ const App = () => {
                     } 
                   />
 
+                  <Route 
+                    path="/register" 
+                    element={
+                      isAuthenticated ? (
+                        user?.registroCompleto ? (
+                          <Navigate to="/dashboard" replace />
+                        ) : (
+                          <Register />
+                        )
+                      ) : (
+                        <Navigate to="/signin" replace />
+                      )
+                    } 
+                  />
+
+                  <Route 
+                    path="/registro-nino" 
+                    element={
+                      isAuthenticated ? (
+                        <RegistroNino />
+                      ) : (
+                        <Navigate to="/signin" replace />
+                      )
+                    } 
+                  />
+
                   {/* Rutas protegidas */}
                   <Route 
                     path="/dashboard" 
                     element={
                       isAuthenticated && !isAdmin 
-                        ? <Dashboard isAuthenticated={isAuthenticated} isAdmin={isAdmin} setShowGradeGroupModal={setShowGradeGroupModal}/> 
+                        ? <Dashboard isAuthenticated={isAuthenticated} isAdmin={isAdmin}/> 
                         : <Navigate to={isAdmin ? "/admin-dashboard" : "/signin"} />
                     } 
                   />
@@ -460,16 +449,7 @@ const App = () => {
                 <WelcomeAlert 
                   isOpen={showWelcomeAlert} 
                   onClose={() => setShowWelcomeAlert(false)}
-                  openGradeGroupModal={() => setShowGradeGroupModal(true)}
                 />
-
-                {showGradeGroupModal && (
-                  <GradeGroupModal 
-                    isOpen={showGradeGroupModal}
-                    onClose={() => setShowGradeGroupModal(false)}
-                    onSubmit={handleProfileUpdate}
-                  />
-                )}
 
                 {/* Modal de escáner QR */}
                 {showScanner && (
