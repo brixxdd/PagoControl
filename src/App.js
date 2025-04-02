@@ -8,7 +8,6 @@ import Dashboard from './components/Dashboard';
 import AdminDashboard from './components/AdminDashboard';
 import Grupos from './components/Grupos';
 import MiniCalendar from './components/MiniCalendar';
-import RequestProjector from './components/RequestProjector';
 import UploadDocuments from './components/UploadDocuments';
 import ViewDocuments from './components/ViewDocuments';
 import SignIn from './components/SignIn';
@@ -22,13 +21,11 @@ import { BACKEND_URL } from './config/config';
 import { Camera } from 'lucide-react';
 import QRScanner from './components/QRScanner';
 import UserRequests from './components/UserRequests';
-import MySolicitudes from './components/MySolicitudes';
 import AdminProyectores from './components/AdminProyectores';
 import NotificationsDropdown from './components/NotificationsDropdown';
 import AsignarProyectorDirecto from './components/AsignarProyectorDirecto';
 import { alertaExito, alertaError } from './components/Alert';
 import { alertService } from './services/alertService';
-import QRHistory from './components/QRHistory';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ThemeSelector from './components/ThemeSelector';
 import Register from './components/Register';
@@ -70,12 +67,19 @@ const App = () => {
       // Verificar si el usuario necesita completar el registro
       const needsRegistration = !user.numeroContacto || 
                               !user.direccion || 
-                              !user.numeroEmergencia;
+                              !user.numeroEmergencia ||
+                              !user.registroCompleto;
 
       if (needsRegistration && !isAdmin) {
         console.log("Usuario necesita completar registro");
         navigate('/register');
         return;
+      }
+
+      // Si el registro está completo y estamos en /register, redirigir al dashboard
+      if (!needsRegistration && window.location.pathname === '/register') {
+        console.log("Registro completo, redirigiendo al dashboard");
+        navigate('/dashboard');
       }
 
       // Agregar logs para depuración
@@ -127,7 +131,7 @@ const App = () => {
         fetchUserData();
       }
     }
-  }, [isAuthenticated, user, isAdmin, updateUserData]);
+  }, [isAuthenticated, user, isAdmin, updateUserData, navigate]);
 
   React.useEffect(() => {
     let timer;
@@ -376,12 +380,6 @@ const App = () => {
                     } 
                   />
                   <Route 
-                    path="/request-projector" 
-                    element={
-                      isAuthenticated ? <RequestProjector /> : <Navigate to="/signin" />
-                    } 
-                  />
-                  <Route 
                     path="/upload-documents" 
                     element={
                       isAuthenticated ? <UploadDocuments /> : <Navigate to="/signin" />
@@ -402,14 +400,6 @@ const App = () => {
                     } 
                   />
                   <Route 
-                    path="/mis-solicitudes" 
-                    element={
-                      isAuthenticated 
-                        ? <MySolicitudes /> 
-                        : <Navigate to="/signin" />
-                    } 
-                  />
-                  <Route 
                     path="/admin-proyectores" 
                     element={
                       isAuthenticated && isAdmin 
@@ -422,14 +412,6 @@ const App = () => {
                     element={
                       isAuthenticated && isAdmin 
                         ? <AsignarProyectorDirecto /> 
-                        : <Navigate to="/signin" />
-                    } 
-                  />
-                  <Route 
-                    path="/qr-history" 
-                    element={
-                      isAuthenticated 
-                        ? <QRHistory /> 
                         : <Navigate to="/signin" />
                     } 
                   />

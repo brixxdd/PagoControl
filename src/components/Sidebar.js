@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaHome, FaUserFriends, FaCog, FaTv, FaFileUpload, FaBars, FaTimes, FaHistory, FaQrcode } from 'react-icons/fa';
+import { FaHome, FaFileUpload, FaBars, FaTimes, FaCog } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 import ThemeSelector from './ThemeSelector';
 import { motion } from 'framer-motion';
@@ -77,16 +77,6 @@ const Sidebar = ({ openGradeGroupModal }) => {
                          currentTheme === 'green' ? 'emerald-200' : 
                          currentTheme === 'ocean' ? 'cyan-200' : 
                          currentTheme === 'sunset' ? 'orange-200' : 'blue-200'} 
-                         dark:from-${currentTheme === 'default' ? 'blue-400' : 
-                                    currentTheme === 'purple' ? 'purple-400' : 
-                                    currentTheme === 'green' ? 'emerald-400' : 
-                                    currentTheme === 'ocean' ? 'cyan-400' : 
-                                    currentTheme === 'sunset' ? 'orange-400' : 'blue-400'} 
-                         dark:to-${currentTheme === 'default' ? 'blue-200' : 
-                                  currentTheme === 'purple' ? 'purple-200' : 
-                                  currentTheme === 'green' ? 'emerald-200' : 
-                                  currentTheme === 'ocean' ? 'cyan-200' : 
-                                  currentTheme === 'sunset' ? 'orange-200' : 'blue-200'} 
                          bg-clip-text text-transparent
                          hover:scale-105 transition-transform duration-300 cursor-default`}>
             Control de Proyectores
@@ -117,20 +107,6 @@ const Sidebar = ({ openGradeGroupModal }) => {
             )}
           </Link>
           
-          <Link to="/request-projector" 
-                className={`${linkClasses("/request-projector")} group`} 
-                onClick={() => setIsOpen(false)}>
-            <div className={`${isActive("/request-projector") 
-              ? `p-1 rounded-full bg-gradient-to-r ${themeStyles.gradient}` 
-              : "p-1 rounded-full transition-all duration-300 group-hover:bg-white/20"}`}>
-              <FaTv className={`${iconClasses} ${isActive("/request-projector") ? "" : "group-hover:scale-110 transition-transform duration-300"}`} />
-            </div>
-            <span className="font-medium">Solicitar Proyector</span>
-            {isActive("/request-projector") && (
-              <div className={`ml-auto w-1.5 h-6 rounded-full bg-gradient-to-b ${themeStyles.gradient}`}></div>
-            )}
-          </Link>
-          
           <Link to="/upload-documents" 
                 className={`${linkClasses("/upload-documents")} group`} 
                 onClick={() => setIsOpen(false)}>
@@ -141,34 +117,6 @@ const Sidebar = ({ openGradeGroupModal }) => {
             </div>
             <span className="font-medium">Subir Documentos</span>
             {isActive("/upload-documents") && (
-              <div className={`ml-auto w-1.5 h-6 rounded-full bg-gradient-to-b ${themeStyles.gradient}`}></div>
-            )}
-          </Link>
-          
-          <Link to="/mis-solicitudes" 
-                className={`${linkClasses("/mis-solicitudes")} group`} 
-                onClick={() => setIsOpen(false)}>
-            <div className={`${isActive("/mis-solicitudes") 
-              ? `p-1 rounded-full bg-gradient-to-r ${themeStyles.gradient}` 
-              : "p-1 rounded-full transition-all duration-300 group-hover:bg-white/20"}`}>
-              <FaHistory className={`${iconClasses} ${isActive("/mis-solicitudes") ? "" : "group-hover:scale-110 transition-transform duration-300"}`} />
-            </div>
-            <span className="font-medium">Mis Solicitudes</span>
-            {isActive("/mis-solicitudes") && (
-              <div className={`ml-auto w-1.5 h-6 rounded-full bg-gradient-to-b ${themeStyles.gradient}`}></div>
-            )}
-          </Link>
-          
-          <Link to="/qr-history" 
-                className={`${linkClasses("/qr-history")} group`} 
-                onClick={() => setIsOpen(false)}>
-            <div className={`${isActive("/qr-history") 
-              ? `p-1 rounded-full bg-gradient-to-r ${themeStyles.gradient}` 
-              : "p-1 rounded-full transition-all duration-300 group-hover:bg-white/20"}`}>
-              <FaQrcode className={`${iconClasses} ${isActive("/qr-history") ? "" : "group-hover:scale-110 transition-transform duration-300"}`} />
-            </div>
-            <span className="font-medium">Mis Códigos QR</span>
-            {isActive("/qr-history") && (
               <div className={`ml-auto w-1.5 h-6 rounded-full bg-gradient-to-b ${themeStyles.gradient}`}></div>
             )}
           </Link>

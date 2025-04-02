@@ -5,6 +5,8 @@ import { useTheme } from '../contexts/ThemeContext';
 import { getCurrentThemeStyles } from '../themes/themeConfig';
 import { BACKEND_URL } from '../config/config';
 import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { authService } from '../services/authService';
 
 const Register = () => {
   const { user, updateUserData } = useAuth();
@@ -22,6 +24,7 @@ const Register = () => {
     registroCompleto: false
   });
   const [showExitAlert, setShowExitAlert] = useState(false);
+  const navigate = useNavigate();
 
   // Función para validar el formulario
   const isFormValid = () => {
@@ -73,16 +76,20 @@ const Register = () => {
 
     try {
       const token = sessionStorage.getItem('jwtToken');
+      const updateData = {
+        numeroContacto: formData.numeroContacto,
+        direccion: formData.direccion,
+        numeroEmergencia: formData.numeroEmergencia,
+        registroCompleto: true
+      };
+
       const response = await fetch(`${BACKEND_URL}/auth/complete-registration`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          ...formData,
-          registroCompleto: true
-        })
+        body: JSON.stringify(updateData)
       });
 
       const data = await response.json();
@@ -91,17 +98,18 @@ const Register = () => {
         throw new Error(data.message || 'Error en el registro');
       }
 
-      // Actualizar el estado local para indicar que el registro está completo
-      setFormData(prev => ({
-        ...prev,
+      // Actualizar el estado global y sessionStorage
+      const updatedUser = await authService.updateUserData({
+        ...user,
+        ...updateData,
         registroCompleto: true
-      }));
-      
-      // Cerrar el modal de alerta si está abierto
-      setShowExitAlert(false);
+      });
 
-      updateUserData(data.user);
-      window.location.reload(); // Recargar para actualizar el estado
+      // Actualizar el estado global
+      updateUserData(updatedUser);
+
+      // Forzar la redirección al dashboard
+      window.location.href = '/dashboard';
     } catch (err) {
       setError(err.message);
     } finally {

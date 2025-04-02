@@ -205,20 +205,18 @@ class AuthService {
 
   _handleAuthResponse(data) {
     if (data.token) {
-      //comprobacion si el servidor devolvio si el usuario normal no tiene grado, grupo y turno
-      if (data.pvez) {
-        console.log('Eres nuevo por aqui? ', data.pvez)
-        sessionStorage.setItem(AUTH_CONFIG.STORAGE_KEYS.FIRSTLOG, data.pvez);
-      }
       sessionStorage.setItem(AUTH_CONFIG.STORAGE_KEYS.JWT_TOKEN, data.token);
-      if(data.refreshToken) {sessionStorage.setItem(AUTH_CONFIG.STORAGE_KEYS.JWT_REFRESH_TOKEN,data.refreshToken)}
+      if(data.refreshToken) {
+        sessionStorage.setItem(AUTH_CONFIG.STORAGE_KEYS.JWT_REFRESH_TOKEN, data.refreshToken);
+      }
       this.setAuthHeader(data.token);
     }
 
     if (data.user) {
       const userData = {
         ...data.user,
-        picture: data.user.picture || sessionStorage.getItem(AUTH_CONFIG.STORAGE_KEYS.USER_PICTURE)
+        picture: data.user.picture || sessionStorage.getItem(AUTH_CONFIG.STORAGE_KEYS.USER_PICTURE),
+        registroCompleto: data.user.registroCompleto
       };
       sessionStorage.setItem(AUTH_CONFIG.STORAGE_KEYS.USER_DATA, JSON.stringify(userData));
     }
@@ -285,7 +283,11 @@ class AuthService {
     try {
       const userStr = sessionStorage.getItem(AUTH_CONFIG.STORAGE_KEYS.USER_DATA);
       if (!userStr) return null;
-      return JSON.parse(userStr);
+      const user = JSON.parse(userStr);
+      return {
+        ...user,
+        registroCompleto: Boolean(user.registroCompleto)
+      };
     } catch (error) {
       console.error('Error al obtener usuario actual:', error);
       return null;
@@ -296,6 +298,24 @@ class AuthService {
   needsRegistration() {
     const user = this.getCurrentUser();
     return user && !user.registroCompleto;
+  }
+
+  async updateUserData(data) {
+    try {
+      // Actualizar datos en sessionStorage
+      const currentUser = this.getCurrentUser();
+      const updatedUser = {
+        ...currentUser,
+        ...data
+      };
+      sessionStorage.setItem(AUTH_CONFIG.STORAGE_KEYS.USER_DATA, JSON.stringify(updatedUser));
+      
+      // Forzar una actualización del estado de autenticación
+      return updatedUser;
+    } catch (error) {
+      console.error('Error al actualizar datos del usuario:', error);
+      throw error;
+    }
   }
 }
 

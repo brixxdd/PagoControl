@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 import toast from 'react-hot-toast';
+import { alertService } from '../services/alertService';
 
 const ThemeContext = createContext();
 
@@ -40,19 +41,35 @@ export const ThemeProvider = ({ children }) => {
 
   const changeTheme = async (newTheme) => {
     try {
+      // Verificar si hay un token válido
+      const token = sessionStorage.getItem('jwtToken');
+      if (!token) {
+        throw new Error('No hay sesión activa');
+      }
+
       await authService.api.put('/update-theme', { 
         theme: newTheme,
-        darkMode // Asegurarnos de enviar el estado actual del darkMode
+        darkMode
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       
       setCurrentTheme(newTheme);
       document.documentElement.setAttribute('data-theme', newTheme);
-      // Mantener el darkMode
       document.documentElement.classList.toggle('dark', darkMode);
-      toast.success('Tema actualizado correctamente');
     } catch (error) {
       console.error('Error al actualizar el tema:', error);
-      toast.error('Error al actualizar el tema');
+      // Si es error de autenticación, redirigir al login
+      if (error.response?.status === 401) {
+        sessionStorage.removeItem('jwtToken');
+        window.location.href = '/signin';
+        return;
+      }
+      if (alertService.canShowAlert('theme-error')) {
+        toast.error('Error al actualizar el tema');
+      }
     }
   };
 

@@ -10,11 +10,27 @@ const NotificationsDropdown = () => {
 
   const fetchNotifications = async () => {
     try {
-      const response = await authService.api.get('/api/notifications');
+      const token = sessionStorage.getItem('jwtToken');
+      if (!token) {
+        throw new Error('No hay sesión activa');
+      }
+
+      const response = await authService.api.get('/notifications', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
       setNotifications(response.data);
       setUnreadCount(response.data.length);
     } catch (error) {
       console.error('Error al obtener notificaciones:', error);
+      // Si es error de autenticación, limpiar notificaciones
+      if (error.response?.status === 401) {
+        setNotifications([]);
+        // Opcional: redirigir al login si se desea
+        // window.location.href = '/signin';
+      }
     }
   };
 

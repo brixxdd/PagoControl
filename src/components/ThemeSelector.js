@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth';
+import { alertService } from '../services/alertService';
 
 const themes = [
   {
@@ -53,19 +54,35 @@ const ThemeSelector = () => {
 
   const handleThemeChange = async (themeId) => {
     try {
+      // Verificar sesión activa
+      const token = sessionStorage.getItem('jwtToken');
+      if (!token) {
+        throw new Error('No hay sesión activa');
+      }
+
       // Actualizar el tema y mantener el darkMode
       await changeTheme(themeId);
       
       // Actualizar en el backend
       await updateUserData({ 
         theme: themeId,
-        darkMode // Incluir el darkMode actual
+        darkMode
       });
       
-      toast.success('Tema actualizado correctamente');
+      if (alertService.canShowAlert('theme-success')) {
+        toast.success('Tema actualizado correctamente');
+      }
     } catch (error) {
       console.error('Error al cambiar el tema:', error);
-      toast.error('Error al cambiar el tema');
+      // Si es error de autenticación
+      if (error.response?.status === 401) {
+        sessionStorage.removeItem('jwtToken');
+        window.location.href = '/signin';
+        return;
+      }
+      if (alertService.canShowAlert('theme-error')) {
+        toast.error('Error al cambiar el tema');
+      }
     }
   };
 

@@ -104,38 +104,35 @@ router.get('/ninos/:tutorId', async (req, res) => {
 
 router.put('/complete-registration', authenticateToken, async (req, res) => {
   try {
-    const { numeroContacto, direccion, numeroEmergencia } = req.body;
-    
-    if (!numeroContacto || !direccion || !numeroEmergencia) {
-      return res.status(400).json({ 
-        message: 'Todos los campos son requeridos' 
-      });
-    }
+    const tutorId = req.user.id;
+    // Solo actualizamos los campos necesarios
+    const updateData = {
+      numeroContacto: req.body.numeroContacto,
+      direccion: req.body.direccion,
+      numeroEmergencia: req.body.numeroEmergencia,
+      registroCompleto: true
+    };
 
-    const tutor = await Tutor.findByIdAndUpdate(
-      req.user.id,
+    const updatedTutor = await Tutor.findByIdAndUpdate(
+      tutorId,
+      { $set: updateData }, // Usar $set para actualizar solo los campos especificados
       { 
-        numeroContacto, 
-        direccion, 
-        numeroEmergencia,
-        registroCompleto: true 
-      },
-      { new: true }
+        new: true,
+        runValidators: true
+      }
     );
 
-    if (!tutor) {
+    if (!updatedTutor) {
       return res.status(404).json({ message: 'Tutor no encontrado' });
     }
 
     res.json({ 
       message: 'Registro completado exitosamente',
-      user: tutor 
+      user: updatedTutor
     });
   } catch (error) {
-    res.status(500).json({ 
-      message: 'Error al completar el registro',
-      error: error.message 
-    });
+    console.error('Error al completar registro:', error);
+    res.status(500).json({ message: 'Error al actualizar el registro' });
   }
 });
 
