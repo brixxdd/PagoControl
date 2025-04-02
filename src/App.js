@@ -340,7 +340,7 @@ const App = () => {
                   />
 
                   <Route 
-                    path="/registro-nino" 
+                    path="/registro-jugadores" 
                     element={
                       isAuthenticated ? (
                         <RegistroNino />

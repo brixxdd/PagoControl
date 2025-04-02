@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaHome, FaFileUpload, FaBars, FaTimes, FaCog } from 'react-icons/fa';
+import { FaHome, FaFileUpload, FaBars, FaTimes, FaCog, FaChild } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 import ThemeSelector from './ThemeSelector';
 import { motion } from 'framer-motion';
@@ -113,10 +113,25 @@ const Sidebar = ({ openGradeGroupModal }) => {
             <div className={`${isActive("/upload-documents") 
               ? `p-1 rounded-full bg-gradient-to-r ${themeStyles.gradient}` 
               : "p-1 rounded-full transition-all duration-300 group-hover:bg-white/20"}`}>
-              <FaFileUpload className={`${iconClasses} ${isActive("/upload-documents") ? "" : "group-hover:scale-110 transition-transform duration-300"}`} />
+              <FaFileUpload className={iconClasses} />
             </div>
             <span className="font-medium">Subir Documentos</span>
             {isActive("/upload-documents") && (
+              <div className={`ml-auto w-1.5 h-6 rounded-full bg-gradient-to-b ${themeStyles.gradient}`}></div>
+            )}
+          </Link>
+
+          {/* Nuevo enlace para Registro de Jugadores */}
+          <Link to="/registro-jugadores" 
+                className={`${linkClasses("/registro-jugadores")} group`} 
+                onClick={() => setIsOpen(false)}>
+            <div className={`${isActive("/registro-jugadores") 
+              ? `p-1 rounded-full bg-gradient-to-r ${themeStyles.gradient}` 
+              : "p-1 rounded-full transition-all duration-300 group-hover:bg-white/20"}`}>
+              <FaChild className={iconClasses} />
+            </div>
+            <span className="font-medium">Registro de Jugadores</span>
+            {isActive("/registro-jugadores") && (
               <div className={`ml-auto w-1.5 h-6 rounded-full bg-gradient-to-b ${themeStyles.gradient}`}></div>
             )}
           </Link>

@@ -1,16 +1,22 @@
 const mongoose = require('mongoose');
 
 const ninoSchema = new mongoose.Schema({
-  nombreCompleto: { type: String, required: true },
-  tipoSangre: { type: String, required: true },
-  alergias: { type: String, default: 'Ninguna' },
-  edad: { type: Number, required: true },
-  genero: { 
-    type: String, 
-    required: true,
-    enum: ['Masculino', 'Femenino', 'Otro']
-  },
+  apellidoPaterno: { type: String, required: true },
+  apellidoMaterno: { type: String, required: true },
+  nombre: { type: String, required: true },
+  claveCURP: { type: String, required: true, unique: true },
   fechaNacimiento: { type: Date, required: true },
+  tipoSangre: { type: String, required: true },
+  lugarNacimiento: { type: String, required: true },
+  estudios: { type: String, required: true },
+  municipioResidencia: { type: String, required: true },
+  codigoPostal: { type: String, required: true },
+  numeroCamiseta: { type: String, required: true },
+  alergias: { type: String, default: 'Ninguna' },
+  cirugias: { type: String, default: 'Ninguna' },
+  afecciones: { type: String, default: 'Ninguna' },
+  nombrePadres: { type: String, required: true },
+  telefonos: { type: String, required: true },
   tutorId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Tutor',

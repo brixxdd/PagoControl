@@ -32,6 +32,8 @@ const { uploadPdf, cleanupOldFiles, verificarUrlCloudinary } = require('./servic
 const qrCodeRoutes = require('./routes/qrCodeRoutes');
 const authRoutes = require('./routes/authRoutes');
 const Tutor = require('./models/Tutor');
+const Nino = require('./models/Nino');
+
 
 // Lista de correos administrativos - MOVER ESTA DEFINICIÓN AL NIVEL SUPERIOR
 const ADMIN_EMAILS = [
@@ -1093,57 +1095,55 @@ app.delete('/api/proyectores/:id', verifyToken, async (req, res) => {
 
 app.use('/qr-codes', qrCodeRoutes);
 
-// Ruta para actualizar el tema del usuario
-app.put('/update-theme', async (req, res) => {
-  try {
-    const { theme, darkMode } = req.body;
-    let userId;
-
-    // Si hay token, actualizar el usuario específico
-    if (req.headers.authorization) {
-      const token = req.headers.authorization.split(' ')[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      userId = decoded.id;
-      
-      await User.findByIdAndUpdate(userId, { theme, darkMode });
-    }
-
-    // Siempre actualizar el último tema usado
-    await User.findOneAndUpdate(
-      {},
-      { theme, darkMode },
-      { 
-        sort: { updatedAt: -1 },
-        upsert: true // Crear si no existe
-      }
-    );
-
-    res.json({ success: true, theme, darkMode });
-  } catch (error) {
-    console.error('Error al actualizar tema:', error);
-    res.status(500).json({ message: 'Error al actualizar el tema' });
-  }
-});
-
 // Ruta para obtener el tema del usuario
 app.get('/user-theme', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    const usuario = await User.findById(userId);
+    const tutor = await Tutor.findById(userId);
     
-    if (!usuario) {
+    if (!tutor) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
     }
     
     res.json({ 
-      theme: usuario.theme || 'default',
-      darkMode: usuario.darkMode || false
+      theme: tutor.theme || 'default',
+      darkMode: tutor.darkMode || false
     });
     
   } catch (error) {
     console.error('Error al obtener tema:', error);
     res.status(500).json({ 
       message: 'Error al obtener el tema',
+      error: error.message 
+    });
+  }
+});
+
+// Ruta para actualizar el tema y darkMode
+app.put('/update-theme', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { theme, darkMode } = req.body;
+    
+    const tutor = await Tutor.findById(userId);
+    if (!tutor) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    
+    // Actualizar solo los campos necesarios
+    tutor.theme = theme;
+    tutor.darkMode = darkMode;
+    await tutor.save();
+    
+    res.json({ 
+      theme: tutor.theme,
+      darkMode: tutor.darkMode
+    });
+    
+  } catch (error) {
+    console.error('Error al actualizar tema:', error);
+    res.status(500).json({ 
+      message: 'Error al actualizar el tema',
       error: error.message 
     });
   }
@@ -1171,5 +1171,64 @@ app.get('/last-theme', async (req, res) => {
   }
 });
   
+// Ruta para registrar un niño
+app.post('/auth/registro-nino', verifyToken, async (req, res) => {
+  try {
+    const tutorId = req.user.id;
+    const {
+      apellidoPaterno,
+      apellidoMaterno,
+      nombre,
+      claveCURP,
+      fechaNacimiento,
+      tipoSangre,
+      lugarNacimiento,
+      estudios,
+      municipioResidencia,
+      codigoPostal,
+      numeroCamiseta,
+      alergias,
+      cirugias,
+      afecciones,
+      nombrePadres,
+      telefonos
+    } = req.body;
+
+    const nuevoNino = new Nino({
+      tutorId,
+      apellidoPaterno,
+      apellidoMaterno,
+      nombre,
+      claveCURP,
+      fechaNacimiento,
+      tipoSangre,
+      lugarNacimiento,
+      estudios,
+      municipioResidencia,
+      codigoPostal,
+      numeroCamiseta,
+      alergias,
+      cirugias,
+      afecciones,
+      nombrePadres,
+      telefonos
+    });
+
+    const ninoGuardado = await nuevoNino.save();
+
+    res.status(201).json({
+      message: 'Jugador registrado exitosamente',
+      nino: ninoGuardado
+    });
+
+  } catch (error) {
+    console.error('Error al registrar jugador:', error);
+    res.status(500).json({
+      message: 'Error al registrar jugador',
+      error: error.message
+    });
+  }
+});
+
 // Rutas de autenticación
 app.use('/auth', authRoutes);
