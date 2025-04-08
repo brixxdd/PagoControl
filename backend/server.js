@@ -1182,8 +1182,7 @@ app.post('/auth/registro-nino', verifyToken, async (req, res) => {
       claveCURP,
       fechaNacimiento,
       tipoSangre,
-      lugarNacimiento,
-      estudios,
+      estado,
       municipioResidencia,
       codigoPostal,
       numeroCamiseta,
@@ -1202,8 +1201,7 @@ app.post('/auth/registro-nino', verifyToken, async (req, res) => {
       claveCURP,
       fechaNacimiento,
       tipoSangre,
-      lugarNacimiento,
-      estudios,
+      estado,
       municipioResidencia,
       codigoPostal,
       numeroCamiseta,
@@ -1214,6 +1212,8 @@ app.post('/auth/registro-nino', verifyToken, async (req, res) => {
       telefonos
     });
 
+    console.log('Datos del nuevo niño:', nuevoNino);
+
     const ninoGuardado = await nuevoNino.save();
 
     res.status(201).json({
@@ -1222,9 +1222,24 @@ app.post('/auth/registro-nino', verifyToken, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error al registrar jugador:', error);
+    console.error('Error detallado:', error);
     res.status(500).json({
       message: 'Error al registrar jugador',
+      error: error.message
+    });
+  }
+});
+
+// Ruta para obtener jugadores de un tutor
+app.get('/auth/jugadores', verifyToken, async (req, res) => {
+  try {
+    const tutorId = req.user.id;
+    const jugadores = await Nino.find({ tutorId }).sort({ createdAt: -1 });
+    res.json(jugadores);
+  } catch (error) {
+    console.error('Error al obtener jugadores:', error);
+    res.status(500).json({
+      message: 'Error al obtener jugadores',
       error: error.message
     });
   }

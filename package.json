@@ -28,7 +28,7 @@
     "express-validator": "^7.2.0",
     "file-saver": "^2.0.5",
     "file-type": "^19.6.0",
-    "framer-motion": "^11.11.9",
+    "framer-motion": "^11.18.2",
     "gapi-script": "^1.2.0",
     "google-auth-library": "^9.14.1",
     "html2canvas": "^1.4.1",
@@ -50,6 +50,7 @@
     "react-router": "^6.10.0",
     "react-router-dom": "^6.10.0",
     "react-scripts": "^5.0.1",
+    "react-toastify": "^11.0.5",
     "sweetalert2": "^11.14.4",
     "web-vitals": "^2.1.4"
   },
