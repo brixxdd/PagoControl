@@ -591,6 +591,12 @@ mongoose.connect(process.env.MONGODB_URI, {
 })
   .then(() => {
     console.log('Conectado a MongoDB Atlas! 🥳');
+    mongoose.connection.on('connected', () => {
+      console.log('MongoDB conectado a:', mongoose.connection.db.databaseName);
+      console.log('Colecciones disponibles:', 
+        mongoose.connection.db.listCollections().toArray()
+      );
+    });
     app.listen(PORT, () => {
       console.log(`Servidor corriendo en el puerto ${PORT}`);
     });
