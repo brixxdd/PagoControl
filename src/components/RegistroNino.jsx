@@ -21,6 +21,7 @@ const RegistroNino = () => {
     nombre: '',
     claveCURP: '',
     fechaNacimiento: '',
+    genero: 'VARONIL',
     tipoSangre: '',
     estado: '',
     municipioResidencia: '',
@@ -164,6 +165,7 @@ const RegistroNino = () => {
         nombre: '',
         claveCURP: '',
         fechaNacimiento: '',
+        genero: 'VARONIL',
         tipoSangre: '',
         estado: '',
         municipioResidencia: '',
@@ -224,6 +226,8 @@ const RegistroNino = () => {
             </div>
             <div className="mt-4 space-y-2">
               <InfoRow label="Fecha de Nacimiento" value={new Date(jugador.fechaNacimiento).toLocaleDateString()} />
+              <InfoRow label="Género" value={jugador.genero} />
+              <InfoRow label="Categoría" value={jugador.categoria} />
               <InfoRow label="Tipo de Sangre" value={jugador.tipoSangre} />
               <InfoRow label="# Camiseta" value={jugador.numeroCamiseta} />
             </div>
@@ -310,18 +314,27 @@ const RegistroNino = () => {
                       tabIndex={5}
                     />
                     <SelectField
-                      label="Tipo de Sangre"
-                    name="tipoSangre"
-                    value={formData.tipoSangre}
-                    onChange={handleChange}
-                    required
-                      options={TIPOS_SANGRE}
-                      placeholder="Seleccione tipo de sangre"
-                  />
-                </div>
+                      label="Género"
+                      name="genero"
+                      value={formData.genero}
+                      onChange={handleChange}
+                      required
+                      options={['VARONIL', 'FEMENIL']}
+                      placeholder="Seleccione género"
+                    />
+                  </div>
 
                   {/* Tercera fila */}
                   <div className="grid grid-3 col-span-full gap-4">
+                    <SelectField
+                      label="Tipo de Sangre"
+                      name="tipoSangre"
+                      value={formData.tipoSangre}
+                      onChange={handleChange}
+                      required
+                      options={TIPOS_SANGRE}
+                      placeholder="Seleccione tipo de sangre"
+                    />
                     <SelectField
                       label="Estado"
                       name="estado"

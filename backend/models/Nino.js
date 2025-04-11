@@ -29,6 +29,24 @@ const ninoSchema = new mongoose.Schema({
     set: v => v.toUpperCase()
   },
   fechaNacimiento: { type: Date, required: true },
+  genero: {
+    type: String,
+    required: true,
+    enum: ['VARONIL', 'FEMENIL'],
+    default: 'VARONIL'
+  },
+  categoria: {
+    type: String,
+    default: 'SIN-ASIGNAR',
+    enum: [
+      'PAÑALES-2010',
+      'MICRO-2014-15',
+      'INFANTIL-2012-13',
+      'PASARELA-2014-15',
+      'CADETE-2016-17',
+      'SIN-ASIGNAR'
+    ]
+  },
   tipoSangre: { 
     type: String, 
     required: true,
@@ -101,6 +119,32 @@ const ninoSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true
+});
+
+// Middleware pre-save para asignar automáticamente la categoría según fecha de nacimiento
+ninoSchema.pre('save', function(next) {
+  const fechaNacimiento = new Date(this.fechaNacimiento);
+  const yearNacimiento = fechaNacimiento.getFullYear();
+  
+  // Asignar categoría según año de nacimiento
+  if (yearNacimiento === 2010) {
+    this.categoria = 'PAÑALES-2010';
+  } else if (yearNacimiento === 2014 || yearNacimiento === 2015) {
+    if (this.genero === 'FEMENIL') {
+      this.categoria = 'PASARELA-2014-15';
+    } else {
+      this.categoria = 'MICRO-2014-15';
+    }
+  } else if (yearNacimiento === 2012 || yearNacimiento === 2013) {
+    this.categoria = 'INFANTIL-2012-13';
+  } else if (yearNacimiento === 2016 || yearNacimiento === 2017) {
+    this.categoria = 'CADETE-2016-17';
+  } else {
+    // Si no coincide con ninguna categoría, asignar una por defecto
+    this.categoria = 'SIN-ASIGNAR';
+  }
+  
+  next();
 });
 
 module.exports = mongoose.model('Nino', ninoSchema);
