@@ -12,4 +12,7 @@ router.get('/user', authenticateToken, qrCodeController.getUserQRCodes);
 // Ruta para eliminar un código QR
 router.delete('/:id', authenticateToken, qrCodeController.deleteQRCode);
 
+// Ruta para generar un código QR
+router.post('/generate', authenticateToken, qrCodeController.generateQRCode);
+
 module.exports = router; 

@@ -28,6 +28,9 @@ const verifyToken = async (req, res, next) => {
     if (!tutor) {
       return res.status(401).json({ message: 'Tutor no encontrado' });
     }
+    /*console.log('Token: ',token)
+    console.log('decoded: ',decoded);
+    console.log('tutor: ',tutor);*/
     req.user = decoded;
     next();
   } catch (error) {
@@ -48,4 +51,13 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
-module.exports = { verifyToken, isAdmin }; 
+// Middleware para verificar si es admin
+const isAdmin2 = (req, res, next) => {
+  console.log('En isAdmin2: ',req.user.isAdmin)
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ message: 'Acceso denegado. Se requieren permisos de administrador.' });
+  }
+  next();
+};
+
+module.exports = { verifyToken, isAdmin, isAdmin2 }; 

@@ -49,7 +49,15 @@ export const useAuth = () => {
     });
 
     if (window.location.pathname !== '/signin') {
-      navigate('/signin', { replace: true });
+      const currentPath = window.location.pathname;
+      // Verificar si estamos en un portal de escuela
+      if (currentPath.includes('/escuela/')) {
+        // Extraer el ID de la escuela de la URL
+        const escuelaId = currentPath.split('/escuela/')[1].split('/')[0];
+        navigate(`/escuela/${escuelaId}/signin`, { replace: true });
+      } else {
+        navigate('/signin', { replace: true });
+      }
     }
   }, [navigate]);
 
@@ -93,8 +101,14 @@ export const useAuth = () => {
         showConfirmButton: false
       });
 
-      const redirectPath = isAdmin ? '/admin-dashboard' : '/dashboard';
-      navigate(redirectPath, { replace: true });
+      const currentPath = window.location.pathname;
+      if (currentPath.includes('/escuela/')) {
+        console.log('aver ver')
+        const escuelaId = currentPath.split('/escuela/')[1].split('/')[0];
+        navigate(`/escuela/${escuelaId}/dashboard`, { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
 
     } catch (error) {
       console.error('Login error:', error);
@@ -136,6 +150,7 @@ export const useAuth = () => {
     try {
       const currentUser = authService.getCurrentUser();
       if (currentUser) {
+        console.log('check session - useAuth - SI hay usuario');
         setAuthState({
           isAuthenticated: true,
           isAdmin: currentUser.isAdmin,
@@ -144,6 +159,7 @@ export const useAuth = () => {
           isLoading: false
         });
       } else {
+        console.log('check session - useAuth - SI hay usuario');
         await initializeGapi();
         setAuthState({
           isAuthenticated: false,
@@ -196,7 +212,15 @@ export const useAuth = () => {
         isLoading: false
       });
       
-      navigate('/signin', { replace: true });
+      const currentPath = window.location.pathname;
+      // Verificar si estamos en un portal de escuela
+      if (currentPath.includes('/escuela/')) {
+        // Extraer el ID de la escuela de la URL
+        const escuelaId = currentPath.split('/escuela/')[1].split('/')[0];
+        navigate(`/escuela/${escuelaId}/signin`, { replace: true });
+      } else {
+        navigate('/signin', { replace: true });
+      }
     } catch (error) {
       console.error('Logout error:', error);
       handleError(error);

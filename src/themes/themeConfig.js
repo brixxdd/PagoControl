@@ -63,6 +63,35 @@ export const themeGradients = {
     cancelButton: 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600',
     borderColor: 'border-gray-300 dark:border-gray-600',
     sidebarGradient: 'from-orange-600 to-pink-800'
+  },
+  escuela: {
+    // Gradiente principal
+    gradient: 'from-escuela-primary to-escuela-secondary',
+    // Estado hover
+    hover:   'hover:from-escuela-primary hover:to-escuela-secondary',
+    // Borde
+    border:  'border-escuela-border',
+    // Color de texto
+    text:    'text-escuela-text',
+    // Fondo (modo claro y modo oscuro)
+    background: 'bg-escuela-bg dark:bg-escuela-bg-secondary',
+    // Gradiente para botones de "eliminar"
+    deleteGradient: 'from-escuela-error to-escuela-error',
+    deleteHover:    'hover:from-escuela-error hover:to-escuela-error',
+    deleteBorder:   'focus:ring-escuela-error dark:focus:ring-escuela-error',
+    // Botón de cancelar
+    cancelButton: [
+      'bg-escuela-bg',
+      'text-escuela-text',
+      'hover:bg-escuela-bg-secondary',
+      'dark:bg-escuela-bg-secondary',
+      'dark:text-escuela-text',
+      'dark:hover:bg-escuela-bg'
+    ].join(' '),
+    // Color de borde de elementos genéricos
+    borderColor:    'border-escuela-border dark:border-escuela-border',
+    // Gradiente para la barra lateral
+    sidebarGradient: 'from-escuela-secondary to-escuela-primary'
   }
 };
 

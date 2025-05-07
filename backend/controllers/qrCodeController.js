@@ -1,4 +1,5 @@
 const QRCode = require('../models/QRCode');
+const QRCodeModel = require('../models/QRCode');
 
 exports.saveQRCode = async (req, res) => {
   try {
@@ -77,6 +78,36 @@ exports.deleteQRCode = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error al eliminar el código QR',
+      error: error.message
+    });
+  }
+};
+
+exports.generateQRCode = async (req, res) => {
+  try {
+    const { qrData } = req.body; // Obtener los datos del cuerpo de la solicitud
+
+    if (!qrData) {
+      return res.status(400).json({ message: 'Datos de QR requeridos' });
+    }
+
+    // Generar el código QR
+    const qrDataURL = await QRCode.toDataURL(qrData);
+
+    // Aquí puedes guardar el código QR en la base de datos si es necesario
+    const newQRCode = new QRCodeModel({ qrData, userId: req.user.id });
+    await newQRCode.save();
+
+    res.status(201).json({
+      success: true,
+      qrCode: qrDataURL,
+      message: 'Código QR generado exitosamente'
+    });
+  } catch (error) {
+    console.error('Error al generar código QR:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al generar el código QR',
       error: error.message
     });
   }

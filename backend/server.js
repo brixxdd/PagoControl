@@ -33,6 +33,11 @@ const qrCodeRoutes = require('./routes/qrCodeRoutes');
 const authRoutes = require('./routes/authRoutes');
 const Tutor = require('./models/Tutor');
 const Nino = require('./models/Nino');
+const Escuela = require('./models/Escuela');
+const escuelaRoutes = require('./routes/escuelaRoutes');
+const SolicitudInscripcion = require('./models/SolicitudInscripcion');
+const { generateQRCode } = require('./utils/qrService');
+
 
 
 // Lista de correos administrativos - MOVER ESTA DEFINICIÓN AL NIVEL SUPERIOR
@@ -47,6 +52,7 @@ const ADMIN_EMAILS = [
   'pedro.escobar@unach.mx',
   'brianes666@gmail.com',
   'brianfloresxxd@gmail.com',
+  'dianasenger388@gmail.com',
   'nuevo.correo@unach.mx'
 ];
 
@@ -139,6 +145,7 @@ const verifyToken = async (req, res, next) => {
       'pedro.escobar@unach.mx',
       'brianes666@gmail.com',
       'brianfloresxxd@gmail.com',
+      'dianasenger388@gmail.com',
       'nuevo.correo@unach.mx'
     ];
     
@@ -461,8 +468,9 @@ app.post('/refresh-token', async (req, res) => {
   }
 
   try {
+    console.log('Intentando renovar en /refresh-token')
     const decoded = jwt.verify(refreshToken, JWT_SECRET);
-    const user = await User.findById(decoded.id);
+    const user = await Tutor.findById(decoded.id);
 
     if (!user) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
@@ -472,10 +480,10 @@ app.post('/refresh-token', async (req, res) => {
       { 
         id: user._id,
         email: user.email,
-        isAdmin: user.email === 'proyectoresunach@gmail.com'
+        isAdmin: ADMIN_EMAILS.includes(user.email)
       }, 
       JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '15m' }
     );
 
     res.json({ 
@@ -484,7 +492,13 @@ app.post('/refresh-token', async (req, res) => {
         id: user._id,
         email: user.email,
         nombre: user.nombre,
-        picture: user.picture
+        picture: user.picture,
+        //aqui esta el pedo ya veran
+        isAdmin: ADMIN_EMAILS.includes(user.email),
+        numeroContacto: user.numeroContacto,
+        direccion: user.direccion,
+        numeroEmergencia: user.numeroEmergencia,
+        registroCompleto: user.registroCompleto,
       }
     });
   } catch (error) {
@@ -798,7 +812,7 @@ app.get('/api/admin-emails', (req, res) => {
 // Endpoint para obtener los datos más recientes del usuario
 app.get('/user-data', verifyToken, async (req, res) => {
   try {
-    const usuario = await User.findById(req.user.id);
+    const usuario = await Tutor.findById(req.user.id);
     
     if (!usuario) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
@@ -1159,7 +1173,7 @@ app.put('/update-theme', verifyToken, async (req, res) => {
 app.get('/last-theme', async (req, res) => {
   try {
     // Obtener el último tema y darkMode usados
-    const ultimoTema = await User.findOne({}, { theme: 1, darkMode: 1 })
+    const ultimoTema = await Tutor.findOne({}, { theme: 1, darkMode: 1 })
       .sort({ updatedAt: -1 })
       .limit(1);
     
@@ -1181,6 +1195,8 @@ app.get('/last-theme', async (req, res) => {
 app.post('/auth/registro-nino', verifyToken, async (req, res) => {
   try {
     const tutorId = req.user.id;
+
+    // 1) Extraemos escuelaIdentificador y el resto de campos
     const {
       apellidoPaterno,
       apellidoMaterno,
@@ -1200,6 +1216,22 @@ app.post('/auth/registro-nino', verifyToken, async (req, res) => {
       telefonos
     } = req.body;
 
+    // Aquí guardamos en let el campo identificador que viene en req.body
+    let escuelaObjectId;  
+    const escuelaIdentificador = req.body.escuelaId;  // el identificador de tu modelo Escuela
+
+    if (escuelaIdentificador) {
+      const escuela = await Escuela.findOne({ identificador: escuelaIdentificador });
+      if (!escuela) {
+        return res
+          .status(404)
+          .json({ message: `No existe Escuela con identificador '${escuelaIdentificador}'` });
+      }
+      // Ahora sí podemos asignar al let
+      escuelaObjectId = escuela._id;
+    }
+
+    // 2) Construimos el nuevo Nino con la referencia correcta
     const nuevoNino = new Nino({
       tutorId,
       apellidoPaterno,
@@ -1217,7 +1249,9 @@ app.post('/auth/registro-nino', verifyToken, async (req, res) => {
       cirugias,
       afecciones,
       nombrePadres,
-      telefonos
+      telefonos,
+      // Solo incluimos escuelaId si existía identificador
+      ...(escuelaObjectId && { escuelaId: escuelaObjectId })
     });
 
     console.log('Datos del nuevo niño:', nuevoNino);
@@ -1242,7 +1276,24 @@ app.post('/auth/registro-nino', verifyToken, async (req, res) => {
 app.get('/auth/jugadores', verifyToken, async (req, res) => {
   try {
     const tutorId = req.user.id;
-    const jugadores = await Nino.find({ tutorId }).sort({ createdAt: -1 });
+    const { escuelaId } = req.query; // Obtener escuelaId de los parámetros de consulta
+    
+    let query = { tutorId };
+    
+    // Si se proporciona escuelaId, filtrar también por escuela
+    if (escuelaId) {
+      // 1) Buscar la escuela por su identificador
+      const escuela = await Escuela.findOne({ identificador: escuelaId });
+      if (!escuela) {
+        return res
+          .status(404)
+          .json({ message: `No existe Escuela con identificador '${identEscuela}'` });
+      }
+      // 2) Usar su ObjectId real en el filtro
+      query.escuelaId = escuela._id;
+    }
+    
+    const jugadores = await Nino.find(query).sort({ createdAt: -1 }).populate('escuelaId', 'nombre identificador');;
     res.json(jugadores);
   } catch (error) {
     console.error('Error al obtener jugadores:', error);
@@ -1255,3 +1306,361 @@ app.get('/auth/jugadores', verifyToken, async (req, res) => {
 
 // Rutas de autenticación
 app.use('/auth', authRoutes);
+
+// Rutas para escuelas
+app.use('/api/escuelas', escuelaRoutes);
+
+// Ruta para obtener configuración de una escuela específica
+app.get('/api/escuela-config/:identificador', async (req, res) => {
+  try {
+    const escuela = await Escuela.findOne({ 
+      identificador: req.params.identificador,
+      activa: true 
+    });
+    
+    if (!escuela) {
+      return res.status(404).json({ message: 'Escuela no encontrada o inactiva' });
+    }
+    
+    res.json({
+      nombre: escuela.nombre,
+      logoUrl: escuela.logoUrl,
+      tema: escuela.tema,
+      identificador: escuela.identificador,
+      direccion: escuela.direccion,
+      mision: escuela.mision,
+      vision: escuela.vision,
+      diasEntrenamiento: escuela.diasEntrenamiento
+    });
+  } catch (error) {
+    console.error('Error al obtener configuración de escuela:', error);
+    res.status(500).json({ message: 'Error al obtener configuración', error: error.message });
+  }
+});
+
+// Ruta para obtener todas las escuelas
+app.get('/noapi/escuelas', async (req, res) => {
+  try {
+    const escuelas = await Escuela.find({ activa: true }); // Solo obtener escuelas activas
+    res.json(escuelas);
+  } catch (error) {
+    console.error('Error al obtener todas las escuelas:', error);
+    res.status(500).json({ message: 'Error al obtener escuelas', error: error.message });
+  }
+});
+
+// Ruta para obtener las escuelas en las que el tutor tiene niños registrados
+app.get('/api/escuelas-registradas', verifyToken, async (req, res) => {
+  try {
+    // Obtener los niños asociados al tutor
+    const ninos = await Nino.find({ tutorId: req.user.id });
+
+    // Obtener los IDs de las escuelas a partir de los niños
+    const escuelaIds = ninos.map(nino => nino.escuelaId).filter(id => id); // Filtrar IDs nulos
+
+    // Contar jugadores por escuela
+    const jugadoresPorEscuela = {};
+    ninos.forEach(nino => {
+      if (nino.escuelaId) {
+        const idString = nino.escuelaId.toString();
+        jugadoresPorEscuela[idString] = (jugadoresPorEscuela[idString] || 0) + 1;
+      }
+    });
+
+    // Obtener las escuelas únicas
+    const escuelas = await Escuela.find({ _id: { $in: escuelaIds } });
+
+    // Añadir el conteo de jugadores a cada escuela
+    const escuelasConConteo = escuelas.map(escuela => {
+      const escuelaObj = escuela.toObject();
+      escuelaObj.jugadoresRegistrados = jugadoresPorEscuela[escuela._id.toString()] || 0;
+      return escuelaObj;
+    });
+
+    res.json(escuelasConConteo);
+  } catch (error) {
+    console.error('Error al obtener escuelas registradas:', error);
+    res.status(500).json({ message: 'Error al obtener escuelas registradas', error: error.message });
+  }
+});
+
+
+
+//nuevas cosas
+// Ruta para crear una solicitud de inscripción
+app.post('/auth/solicitud-inscripcion', verifyToken, async (req, res) => {
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      const tutorId = req.user.id;
+      const { escuelaId: escuelaIdentificador, ninos } = req.body;
+
+      if (!Array.isArray(ninos) || ninos.length === 0) {
+        throw { status: 400, message: 'No hay jugadores en la solicitud' };
+      }
+
+      // 1) Buscar escuela
+      const escuela = await Escuela
+        .findOne({ identificador: escuelaIdentificador })
+        .session(session);
+      if (!escuela) {
+        throw { status: 404, message: `Escuela '${escuelaIdentificador}' no existe` };
+      }
+
+      // 2) Crear la solicitud
+      const [solicitud] = await SolicitudInscripcion.create([{
+        tutorId,
+        escuelaId: escuela._id,
+        ninos: ninos.map(n => ({ ...n, ninoId: null }))
+      }], { session });
+
+      // 3) Generar QR y guardar en la colección QRCode
+      const destino = `${process.env.BACKEND_URL2}/admin/solicitud/${solicitud._id}`;
+      const qrDataUrl = await generateQRCode(destino, tutorId, { size: 400, margin: 2 }, session);
+
+      // 4) Actualizar la solicitud con el QR
+      await SolicitudInscripcion.updateOne(
+        { _id: solicitud._id },
+        { $set: { codigoQR: qrDataUrl } },
+        { session }
+      );
+
+      // 5) Responder al cliente
+      res.status(201).json({
+        message: 'Solicitud creada con QR registrado',
+        solicitudId: solicitud._id,
+        codigoQR: qrDataUrl
+      });
+    });
+  } catch (err) {
+    console.error('Error en creación de solicitud con QR:', err);
+    const status = err.status || 500;
+    res.status(status).json({ message: err.message || 'Error inesperado' });
+  } finally {
+    session.endSession();
+  }
+});
+
+/*app.post('/auth/solicitud-inscripcion', verifyToken, async (req, res) => {
+  try {
+    const tutorId = req.user.id;
+    const { escuelaId: escuelaIdentificador, ninos } = req.body;
+    
+    // Validar que haya niños en la solicitud
+    if (!ninos || ninos.length === 0) {
+      return res.status(400).json({ message: 'No hay jugadores en la solicitud' });
+    }
+    
+    // Encontrar la escuela por su identificador
+    const escuela = await Escuela.findOne({ identificador: escuelaIdentificador });
+    if (!escuela) {
+      return res.status(404).json({ message: `No existe Escuela con identificador '${escuelaIdentificador}'` });
+    }
+    
+    // Crear la solicitud
+    const solicitud = new SolicitudInscripcion({
+      tutorId,
+      escuelaId: escuela._id,
+      ninos: ninos.map(nino => ({
+        ...nino,
+        ninoId: null // Se llenará cuando se apruebe
+      }))
+    });
+    
+    // Generar código QR
+    const solicitudId = solicitud._id.toString();
+    const qrData = `${process.env.BACKEND_URL2}/admin/solicitud/${solicitudId}`;
+    const qrCode = await generateQRCode(qrData);
+    solicitud.codigoQR = qrCode;
+    
+    await solicitud.save();
+    
+    res.status(201).json({
+      message: 'Solicitud de inscripción creada exitosamente',
+      solicitudId: solicitudId,
+      codigoQR: qrCode
+    });
+  } catch (error) {
+    console.error('Error al crear solicitud de inscripción:', error);
+    res.status(500).json({ 
+      message: 'Error al crear solicitud de inscripción', 
+      error: error.message 
+    });
+  }
+});*/
+
+// Ruta para el historial de solicitudes del tutor
+app.get('/auth/mis-solicitudes-inscripcion', verifyToken, async (req, res) => {
+  try {
+    const tutorId = req.user.id;
+    
+    const solicitudes = await SolicitudInscripcion.find({ tutorId })
+      .populate('escuelaId', 'nombre identificador logoUrl')
+      .sort({ fechaSolicitud: -1 });
+    
+    res.json(solicitudes);
+  } catch (error) {
+    console.error('Error al obtener solicitudes:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener solicitudes de inscripción', 
+      error: error.message 
+    });
+  }
+});
+
+// Ruta para obtener una solicitud específica (admin)
+app.get('/admin/solicitud/:id', verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const solicitud = await SolicitudInscripcion.findById(id)
+      .populate('tutorId', 'nombre apellidos email numeroContacto')
+      .populate('escuelaId', 'nombre identificador direccion');
+    
+    if (!solicitud) {
+      return res.status(404).json({ message: 'Solicitud no encontrada' });
+    }
+    
+    res.json(solicitud);
+  } catch (error) {
+    console.error('Error al obtener solicitud:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener la solicitud', 
+      error: error.message 
+    });
+  }
+});
+
+// Ruta para procesar una solicitud (admin)
+app.put('/admin/solicitud/:id', verifyToken, async (req, res) => {
+  try {
+    // Verificar si es administrador
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ message: 'Acceso denegado' });
+    }
+    
+    const { id } = req.params;
+    const { estado, preciosPorNino, observaciones } = req.body;
+    
+    const solicitud = await SolicitudInscripcion.findById(id);
+    if (!solicitud) {
+      return res.status(404).json({ message: 'Solicitud no encontrada' });
+    }
+    
+    // Actualizar información de la solicitud
+    solicitud.estado = estado;
+    solicitud.preciosPorNino = preciosPorNino || [];
+    solicitud.observaciones = observaciones;
+    solicitud.fechaRespuesta = new Date();
+    
+    // Calcular precio total
+    solicitud.precioTotal = preciosPorNino.reduce((total, item) => total + item.precio, 0);
+    
+    // Si se aprueba, crear los registros de niños
+    if (estado === 'aprobada') {
+      for (let i = 0; i < solicitud.ninos.length; i++) {
+        const ninoData = solicitud.ninos[i];
+        const precioInfo = preciosPorNino.find(p => p.ninoIndex === i) || { precio: 0 };
+        
+        // Crear el niño en la base de datos
+        const nuevoNino = new Nino({
+          tutorId: solicitud.tutorId,
+          escuelaId: solicitud.escuelaId,
+          precio: precioInfo.precio,
+          ...ninoData
+        });
+        
+        const ninoGuardado = await nuevoNino.save();
+        
+        // Actualizar el ID en la solicitud
+        solicitud.ninos[i].ninoId = ninoGuardado._id;
+      }
+    }
+    
+    await solicitud.save();
+    
+    res.json({ 
+      message: `Solicitud ${estado} exitosamente`,
+      solicitud
+    });
+  } catch (error) {
+    console.error('Error al procesar solicitud:', error);
+    res.status(500).json({ 
+      message: 'Error al procesar la solicitud', 
+      error: error.message 
+    });
+  }
+});
+
+// Función auxiliar para generar códigos QR
+/*const generateQRCode = async (data) => {
+  const QRCode = require('qrcode');
+  try {
+    // Generar QR y subir a Cloudinary o guardar localmente
+    const qrDataURL = await QRCode.toDataURL(data);
+    // Aquí podrías subirlo a Cloudinary o usar otra forma de almacenamiento
+    return qrDataURL;
+  } catch (error) {
+    console.error('Error al generar código QR:', error);
+    throw error;
+  }
+};*/
+
+// Ruta para obtener todas las solicitudes de inscripción (admin)
+app.get('/admin/solicitudes-inscripcion', verifyToken, async (req, res) => {
+  try {
+    // Verificar si es administrador
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ message: 'Acceso denegado' });
+    }
+    
+    const solicitudes = await SolicitudInscripcion.find()
+      .populate('tutorId', 'nombre apellidos email numeroContacto')
+      .populate('escuelaId', 'nombre identificador direccion')
+      .sort({ fechaSolicitud: -1 });
+    
+    res.json(solicitudes);
+  } catch (error) {
+    console.error('Error al obtener solicitudes:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener solicitudes de inscripción', 
+      error: error.message 
+    });
+  }
+});
+
+// Ruta para obtener solicitudes de una escuela específica (admin)
+app.get('/admin/solicitudes-inscripcion/escuela/:escuelaId', verifyToken, async (req, res) => {
+  try {
+    // 1) Verificar si es administrador
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ message: 'Acceso denegado' });
+    }
+
+    // 2) Capturar el identificador de la escuela (no es ObjectId)
+    const { escuelaId } = req.params;
+
+    // 3) Buscar la escuela por su campo 'identificador'
+    const identificadorEscuela = await Escuela.findOne({ identificador: escuelaId });
+    if (!identificadorEscuela) {
+      return res.status(404).json({ message: 'Escuela no encontrada' });
+    }
+    
+    // 4) Usar el _id real para consultar solicitudes
+    const solicitudes = await SolicitudInscripcion.find({ escuelaId: identificadorEscuela._id })
+      .populate('tutorId', 'nombre apellidos email numeroContacto')
+      .populate('escuelaId', 'nombre identificador direccion')
+      .sort({ fechaSolicitud: -1 });
+    
+    // 5) Devolver resultados
+    res.json(solicitudes);
+  } catch (error) {
+    console.error('Error al obtener solicitudes por escuela:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener solicitudes de inscripción', 
+      error: error.message 
+    });
+  }
+});
+
+

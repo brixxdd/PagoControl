@@ -11,6 +11,10 @@ function Dashboard({ isAuthenticated, isAdmin, setShowGradeGroupModal }) {
   const { currentTheme } = useTheme();
   const themeStyles = getCurrentThemeStyles(currentTheme);
   const [forceUpdate, setForceUpdate] = useState(0);
+  const [schools, setSchools] = useState([]);
+  const [registeredSchools, setRegisteredSchools] = useState([]);
+  const [isLoadingRegisteredSchools, setIsLoadingRegisteredSchools] = useState(true);
+  const [registeredSchoolsError, setRegisteredSchoolsError] = useState(null);
 
   // Escuchar cambios de tema
   useEffect(() => {
@@ -52,29 +56,92 @@ function Dashboard({ isAuthenticated, isAdmin, setShowGradeGroupModal }) {
     fetchStats();
   }, []);
 
+  useEffect(() => {
+    const fetchSchools = async () => {
+      try {
+        const response = await authService.api.get('/noapi/escuelas');
+        setSchools(response.data);
+      } catch (error) {
+        console.error('Error al obtener escuelas:', error);
+      }
+    };
+
+    const fetchRegisteredSchools = async () => {
+      setIsLoadingRegisteredSchools(true);
+      try {
+        const response = await authService.api.get('/api/escuelas-registradas');
+        setRegisteredSchools(response.data);
+        setRegisteredSchoolsError(null);
+      } catch (error) {
+        console.error('Error al obtener escuelas registradas:', error);
+        setRegisteredSchoolsError('No se pudieron cargar las escuelas registradas. Intenta de nuevo más tarde.');
+      } finally {
+        setIsLoadingRegisteredSchools(false);
+      }
+    };
+
+    fetchSchools();
+    fetchRegisteredSchools();
+  }, []);
+  
+
   return (
     <div className="bg-gray-100 dark:bg-gray-900 min-h-screen w-full">
       <div className="w-full max-w-[2412px] mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-6">
-          Panel de Control de Proyectores
+          Panel de Control de Escuelas
         </h1>
         
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+          Portales a Escuelas Disponibles
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-8">
-          <DashboardCard 
-            icon={faClockRotateLeft}
-            title="Mis Solicitudes"
-            value={stats.misSolicitudes}
-            description="Historial personal"
-            themeStyles={themeStyles}
-          />
-          <DashboardCard 
-            icon={faChalkboardTeacher}
-            title="Solicitudes Activas"
-            value={stats.solicitudesActivas}
-            description="En curso"
-            themeStyles={themeStyles}
-          />
+          {schools.map(school => (
+            <DashboardCard 
+              key={school._id}
+              title={school.nombre}
+              value="Acceder"
+              direccion={school.direccion}
+              logoUrl={school.logoUrl || 'https://th.bing.com/th/id/R.75df72d204abdeaf2bb93451a5b54233?rik=9U863Dc0d43quA&pid=ImgRaw&r=0'}
+              themeStyles={themeStyles}
+              identificador={school.identificador}
+            />
+          ))}
         </div>
+
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4 flex items-center">
+          Mis Escuelas Registradas
+          {isLoadingRegisteredSchools && (
+            <span className="ml-2 inline-block w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></span>
+          )}
+        </h2>
+        
+        {registeredSchoolsError && (
+          <div className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 p-4 rounded-lg mb-6">
+            {registeredSchoolsError}
+          </div>
+        )}
+
+        {!isLoadingRegisteredSchools && registeredSchools.length === 0 ? (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 text-center">
+            <p className="text-gray-600 dark:text-gray-400">
+              No tienes jugadores registrados en ninguna escuela aún.
+            </p>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              Navega a una escuela y registra a tus jugadores para verlas aquí.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-8">
+            {registeredSchools.map(school => (
+              <RegisteredSchoolCard 
+                key={school._id}
+                school={school}
+                themeStyles={themeStyles}
+              />
+            ))}
+          </div>
+        )}
         
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-gray-700/20 p-6 mb-8">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
@@ -82,12 +149,7 @@ function Dashboard({ isAuthenticated, isAdmin, setShowGradeGroupModal }) {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <ActionButton 
-              to="/request-projector" 
-              label="Solicitar Proyector"
-              icon={faTv}
-            />
-            <ActionButton 
-              to="/mis-solicitudes" 
+              to="/historial-solicitudes" 
               label="Mis Solicitudes"
               icon={faClockRotateLeft}
             />
@@ -130,19 +192,32 @@ function Dashboard({ isAuthenticated, isAdmin, setShowGradeGroupModal }) {
   );
 }
 
-function DashboardCard({ icon, title, value, description, themeStyles }) {
+function DashboardCard({ title, value, direccion, logoUrl, themeStyles, identificador }) {
   return (
-    <div className={`bg-gradient-to-r ${themeStyles.gradient} rounded-lg shadow-md 
-                    dark:shadow-gray-700/20 p-6 text-white`}>
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold mb-2">{title}</h3>
-          <p className="text-3xl font-bold">{value}</p>
-          <p className="text-sm opacity-80">{description}</p>
+    {/*Por si solo quieres navegar <Link to={`/escuela/${identificador}`} className="w-full"> */},
+    <Link to={`/escuela/${identificador}`} className="w-full" onClick={() => {
+      window.location.href = `/escuela/${identificador}`;
+    }}>
+      <div className={`bg-gradient-to-r ${themeStyles.gradient} rounded-lg shadow-md 
+                      dark:shadow-gray-700/20 p-6 text-white`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <img src={logoUrl} alt={`${title} Logo`} className="w-16 h-16 mb-2" />
+            <h3 className="text-lg font-semibold mb-2">{title}</h3>
+            <p className="text-sm opacity-80">{direccion}</p>
+            <p className="text-3xl font-bold">{value}</p>
+          </div>
         </div>
-        <FontAwesomeIcon icon={icon} size="3x" className="opacity-50" />
+        <div className="mt-4">
+          <button 
+            className={`bg-white text-gray-800 py-2 px-4 rounded-lg 
+                        hover:bg-gray-200 transition duration-300 w-full`}
+          >
+            Ir al portal
+          </button>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -185,6 +260,61 @@ function TableRow({ date, subject, schedule, status }) {
         </span>
       </td>
     </tr>
+  );
+}
+
+function RegisteredSchoolCard({ school, themeStyles }) {
+  const {
+    _id,
+    nombre,
+    direccion,
+    logoUrl,
+    identificador,
+    diasEntrenamiento = ['Martes', 'Jueves'], // Valores predeterminados por si acaso
+    jugadoresRegistrados = 0
+  } = school;
+  
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+      <div className={`bg-gradient-to-r ${themeStyles.gradient} p-4 text-white`}>
+        <div className="flex items-center space-x-4">
+          <img 
+            src={logoUrl || 'https://th.bing.com/th/id/R.75df72d204abdeaf2bb93451a5b54233?rik=9U863Dc0d43quA&pid=ImgRaw&r=0'} 
+            alt={`${nombre} Logo`} 
+            className="w-16 h-16 rounded-full object-cover border-2 border-white"
+          />
+          <div>
+            <h3 className="text-xl font-bold">{nombre}</h3>
+            <p className="text-white/80 text-sm">{direccion}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div className="p-4">
+        <div className="mb-4 grid grid-cols-2 gap-2">
+          <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Jugadores</p>
+            <p className="text-2xl font-bold text-gray-800 dark:text-white">{jugadoresRegistrados}</p>
+          </div>
+          <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Entrenamientos</p>
+            <p className="text-sm font-bold text-gray-800 dark:text-white">{diasEntrenamiento.join(', ')}</p>
+          </div>
+        </div>
+        
+        <Link 
+          to={`/escuela/${identificador}`}
+          className={`block w-full text-center py-2 px-4 rounded-lg
+                   bg-gradient-to-r ${themeStyles.gradient}
+                   text-white font-medium transition-opacity hover:opacity-90`}
+                   onClick={() => {
+                    window.location.href = `/escuela/${identificador}`;
+                  }}
+        >
+          Ir al portal
+        </Link>
+      </div>
+    </div>
   );
 }
 

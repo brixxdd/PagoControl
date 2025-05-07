@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { authService } from '../services/authService';
 import toast from 'react-hot-toast';
 import { alertService } from '../services/alertService';
@@ -12,6 +13,7 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     const loadUserTheme = async () => {
+      console.log('Verificando cuantas veces se usa ThemeContext.js en el runtime')
       try {
         const token = sessionStorage.getItem('jwtToken');
         let themeData;
@@ -109,10 +111,28 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
-export const useTheme = () => {
+/*export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
     throw new Error('useTheme must be used within a ThemeProvider');
   }
   return context;
-}; 
+};*/
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  const { escuelaId } = useParams();
+  if (!context) {
+    if(escuelaId){
+      // Si no hay provider,devolvemos no-op para los setters
+      return {
+        currentTheme: 'escuela',
+        changeTheme: () => {},
+        darkMode:     false,
+        toggleDarkMode: () => {},
+      };
+    }else throw new Error('useTheme must be used within a ThemeProvider');
+    
+  }
+  return context;
+};

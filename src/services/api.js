@@ -1,7 +1,27 @@
+import axios from 'axios';
 import { BACKEND_URL } from '../config/config';
 
 // Reemplaza la definición de API_URL
 const API_URL = BACKEND_URL;
+
+// Crear instancia de axios con configuración base
+export const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Configurar interceptor para añadir el token de autenticación a las peticiones
+api.interceptors.request.use(config => {
+  const token = sessionStorage.getItem('jwtToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, error => {
+  return Promise.reject(error);
+});
 
 // Función para login
 export const loginUser = async (token) => {

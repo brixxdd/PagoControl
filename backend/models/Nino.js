@@ -116,6 +116,19 @@ const ninoSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Tutor',
     required: true 
+  },
+  escuelaId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Escuela',
+    required: false
+  },
+  precio: { 
+    type: Number, 
+    default: 0 
+  },
+  incluyeUniforme: { 
+    type: Boolean, 
+    default: false 
   }
 }, {
   timestamps: true

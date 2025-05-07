@@ -8,48 +8,84 @@ import { useTheme } from '../contexts/ThemeContext';
 import { getCurrentThemeStyles } from '../themes/themeConfig';
 import { authService } from '../services/authService';
 
-const SignIn = () => {
+const SignIn = ({ escuelaPortal, escuela }) => {
   const { handleGoogleLogin, isAuthenticated, isAdmin } = useAuth();
   const { currentTheme, darkMode } = useTheme();
+  // Selecciona 'escuela' si existe, sino usa currentTheme o 'default' si currentTheme es falsy
+  /*const selectedTheme = escuela
+    ? 'escuela'
+    : (currentTheme || 'default');
+  // Obtiene los estilos con el helper
+  const themeStyles = getCurrentThemeStyles(selectedTheme);*/
   const themeStyles = getCurrentThemeStyles(currentTheme || 'default');
   const navigate = useNavigate();
 
   useEffect(() => {
     const loadInitialTheme = async () => {
       try {
-        const response = await authService.api.get('/last-theme');
+        {
+        /*const response = await authService.api.get('/last-theme');
+        console.log('SignIn.js - Antes de solicitar tema');
         if (response.data) {
           const { theme, darkMode } = response.data;
-          document.documentElement.setAttribute('data-theme', theme || 'default');
+          if(escuela){
+            document.documentElement.setAttribute('data-theme', 'escuela');
+          }else {
+            document.documentElement.setAttribute('data-theme', theme || 'default');
+            document.documentElement.classList.toggle('dark', darkMode);
+          }*/
+          document.documentElement.setAttribute('data-theme', themeStyles || 'default');
           document.documentElement.classList.toggle('dark', darkMode);
+          
+          //console.log('SignIn.js - Variables de tema obtenidas: ',response.data);
+          console.log('SignIn.js - Despues de solicitar tema');
         }
       } catch (error) {
         console.error('Error al cargar tema inicial:', error);
-      }
+      }  
     };
     loadInitialTheme();
   }, []);
 
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
-    
     if (currentUser) {
-      if (!currentUser.registroCompleto) {
-        navigate('/register');
-      } else if (currentUser.isAdmin) {
-        navigate('/admin/dashboard');
+      
+      if (escuela) {
+        console.log('Escuela en sign antes de redirigir: ',escuela)
+        // Redirigir al dashboard de la escuela
+        if (currentUser.isAdmin) {
+          navigate(`/escuela/${escuela.identificador}`, { replace: true });
+        } else {
+          navigate(`/escuela/${escuela.identificador}`, { replace: true });
+        }
       } else {
-        navigate('/dashboard');
+        if (!currentUser.registroCompleto && !currentUser.isAdmin) {
+          navigate('/register');
+        } else if (currentUser.isAdmin) {
+          navigate('/admin-dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       }
+
+      
     }
   }, [navigate]);
 
   if (isAuthenticated) {
+    console.log('En signin, valor de escuela: ',escuelaPortal)
     const user = authService.getCurrentUser();
     if (!user.numeroContacto || !user.direccion || !user.numeroEmergencia) {
       return <Navigate to="/register" replace />;
     }
-    return <Navigate to={isAdmin ? "/admin-dashboard" : "/dashboard"} replace />;
+    if (escuelaPortal) {
+      // Redirigir al dashboard de la escuela
+      navigate(`/escuela/${escuelaPortal.identificador}/dashboard`, { replace: true });
+    } else {
+      // Redirigir al dashboard general
+      return <Navigate to={isAdmin ? "/admin-dashboard" : "/dashboard"} replace />;
+    }
   }
 
   return (

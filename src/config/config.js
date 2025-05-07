@@ -26,7 +26,7 @@ export const AUTH_CONFIG = {
   ADMIN_EMAILS: ADMIN_EMAILS,
   STORAGE_KEYS: {
     JWT_TOKEN: 'jwtToken',
-    JWT_REFRESH_TOKEN: 'refreshToken',
+    JWT_REFRESH_TOKEN: 'jwtRefresh',
     USER_DATA: 'userData',
     USER_PICTURE: 'userPicture',
     FIRSTLOG: 'firstLog'

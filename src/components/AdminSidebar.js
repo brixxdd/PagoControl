@@ -9,6 +9,10 @@ import {
   Monitor,
   Projector,
   Settings,
+  School,
+  HeadphonesIcon,
+  QrCode,
+  ClipboardList,
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import ThemeSelector from './ThemeSelector';
@@ -35,6 +39,31 @@ const AdminSidebar = () => {
       console.error('Error al cambiar modo oscuro:', error);
     }
   };
+
+  // Navegación - Categorías
+  const menuCategories = [
+    {
+      title: "Principal",
+      items: [
+        { path: "/admin-dashboard", icon: LayoutDashboard, label: "Dashboard" }
+      ]
+    },
+    {
+      title: "Gestión",
+      items: [
+        { path: "/admin-escuelas", icon: School, label: "Escuelas" },
+        { path: "/admin-solicitudes", icon: ClipboardList, label: "Solicitudes de Inscripción" },
+        { path: "/helpdesk", icon: HeadphonesIcon, label: "HelpDesk" },
+        
+      ]
+    },
+    {
+      title: "Sistema",
+      items: [
+        { path: "/qr-code", icon: QrCode, label: "Códigos QR" }
+      ]
+    }
+  ];
 
   const NavItem = ({ path, icon: Icon, children }) => {
     const active = isActive(path);
@@ -122,24 +151,34 @@ const AdminSidebar = () => {
         </div>
 
         {/* Navigation con scrollbar personalizada según el tema */}
-        <nav className={`flex-1 p-4 space-y-2 overflow-y-auto 
+        <nav className={`flex-1 p-4 space-y-6 overflow-y-auto 
                        scrollbar-thin scrollbar-thumb-${currentTheme === 'default' ? 'blue-400' : 
                                                       currentTheme === 'purple' ? 'purple-400' : 
                                                       currentTheme === 'green' ? 'emerald-400' : 
                                                       currentTheme === 'ocean' ? 'cyan-400' : 
                                                       currentTheme === 'sunset' ? 'orange-400' : 'blue-400'} 
                        dark:scrollbar-thumb-gray-600 scrollbar-track-transparent`}>
-          <NavItem path="/admin-dashboard" icon={LayoutDashboard}>
-            Dashboard
-          </NavItem>
           
-          <NavItem path="/user-requests" icon={FolderKanban}>
-            Solicitudes por Usuario
-          </NavItem>
-          
-          <NavItem path="/admin-proyectores" icon={Projector}>
-            Gestión de Proyectores
-          </NavItem>
+          {/* Renderizado de categorías de navegación */}
+          {menuCategories.map((category, index) => (
+            <div key={index} className="space-y-2">
+              <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider px-3">
+                {category.title}
+              </h3>
+              
+              <div className="space-y-1">
+                {category.items.map((item, itemIndex) => (
+                  <NavItem 
+                    key={itemIndex} 
+                    path={item.path} 
+                    icon={item.icon}
+                  >
+                    {item.label}
+                  </NavItem>
+                ))}
+              </div>
+            </div>
+          ))}
         </nav>
 
         {/* Footer con controles de tema y efectos hover */}

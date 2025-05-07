@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaHome, FaFileUpload, FaBars, FaTimes, FaCog, FaChild } from 'react-icons/fa';
+import { FaHome, FaFileUpload, FaBars, FaTimes, FaCog, FaChild, FaAddressBook } from 'react-icons/fa';
 import ThemeToggle from './ThemeToggle';
 import ThemeSelector from './ThemeSelector';
 import { motion } from 'framer-motion';
@@ -79,107 +79,85 @@ const Sidebar = ({ openGradeGroupModal }) => {
                          currentTheme === 'sunset' ? 'orange-200' : 'blue-200'} 
                          bg-clip-text text-transparent
                          hover:scale-105 transition-transform duration-300 cursor-default`}>
-            Control de Proyectores
+            Pago Control
           </h1>
         </div>
+        
+        {/* Enlaces con indicador de activo usando gradiente y efectos hover */}
+        <Link to="/" 
+              className={linkClasses("/dashboard")} 
+              onClick={() => setIsOpen(false)}>
+          <div className={`${isActive("/dashboard") 
+            ? `p-1 rounded-full bg-gradient-to-r ${themeStyles.gradient}` 
+            : "p-1 rounded-full transition-all duration-300 group-hover:bg-white/20"}`}>
+            <FaHome className={`${iconClasses} ${isActive("/") ? "" : "group-hover:scale-110 transition-transform duration-300"}`} />
+          </div>
+          <span className="font-medium">Dashboard</span>
+          {isActive("/") && (
+            <div className={`ml-auto w-1.5 h-6 rounded-full bg-gradient-to-b ${themeStyles.gradient}`}></div>
+          )}
+        </Link>
 
         {/* Navigation con scrollbar personalizada según el tema */}
-        <nav className={`flex-1 p-2 space-y-1 overflow-y-auto 
-                       scrollbar-thin scrollbar-thumb-${currentTheme === 'default' ? 'blue-400' : 
-                                                      currentTheme === 'purple' ? 'purple-400' : 
-                                                      currentTheme === 'green' ? 'emerald-400' : 
-                                                      currentTheme === 'ocean' ? 'cyan-400' : 
-                                                      currentTheme === 'sunset' ? 'orange-400' : 'blue-400'} 
-                       dark:scrollbar-thumb-gray-600 scrollbar-track-transparent`}>
-          
-          {/* Enlaces con indicador de activo usando gradiente y efectos hover */}
-          <Link to="/" 
-                className={linkClasses("/")} 
-                onClick={() => setIsOpen(false)}>
-            <div className={`${isActive("/") 
-              ? `p-1 rounded-full bg-gradient-to-r ${themeStyles.gradient}` 
-              : "p-1 rounded-full transition-all duration-300 group-hover:bg-white/20"}`}>
-              <FaHome className={`${iconClasses} ${isActive("/") ? "" : "group-hover:scale-110 transition-transform duration-300"}`} />
+        <nav className={`flex-1 p-2 space-y-1 overflow-y-auto`}>
+          {/* Solo dejar el modo oscuro y personalización */}
+          <div className="p-2 border-t border-white/10 space-y-2 overflow-visible">
+            <div className={`flex items-center justify-between p-2 rounded-lg bg-white/5 
+                           hover:bg-white/10 transition-colors duration-300`}>
+              <span className="font-medium">Modo Oscuro</span>
+              <ThemeToggle 
+                isDark={darkMode} 
+                toggleTheme={handleDarkModeToggle}
+              />
             </div>
-            <span className="font-medium">Dashboard</span>
-            {isActive("/") && (
-              <div className={`ml-auto w-1.5 h-6 rounded-full bg-gradient-to-b ${themeStyles.gradient}`}></div>
+            
+            <button 
+              onClick={() => setShowThemeSelector(!showThemeSelector)}
+              className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 
+                        w-full text-left group
+                        ${showThemeSelector 
+                          ? `bg-gradient-to-r ${themeStyles.gradient}` 
+                          : 'hover:bg-gradient-to-r hover:from-white/5 hover:to-white/20'}`}
+            >
+              <div className={`${showThemeSelector 
+                ? `p-1 rounded-full bg-white/20` 
+                : "p-1 rounded-full transition-all duration-300 group-hover:bg-white/20"}`}>
+                <FaCog className={`${iconClasses} ${showThemeSelector ? "animate-spin" : "group-hover:scale-110 transition-transform duration-300"}`} 
+                      style={{ animationDuration: '3s' }} />
+              </div>
+              <span className="font-medium">Personalización</span>
+              {showThemeSelector && (
+                <div className={`ml-auto w-1.5 h-6 rounded-full bg-white/50`}></div>
+              )}
+            </button>
+            
+            {/* Selector de Temas */}
+            {showThemeSelector && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`mt-2 p-2 rounded-lg bg-gradient-to-br from-black/20 to-white/5 backdrop-blur-sm
+                          max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent`}
+              >
+                <ThemeSelector />
+              </motion.div>
             )}
-          </Link>
-          
-          <Link to="/upload-documents" 
-                className={`${linkClasses("/upload-documents")} group`} 
-                onClick={() => setIsOpen(false)}>
-            <div className={`${isActive("/upload-documents") 
-              ? `p-1 rounded-full bg-gradient-to-r ${themeStyles.gradient}` 
-              : "p-1 rounded-full transition-all duration-300 group-hover:bg-white/20"}`}>
-              <FaFileUpload className={iconClasses} />
-            </div>
-            <span className="font-medium">Subir Documentos</span>
-            {isActive("/upload-documents") && (
-              <div className={`ml-auto w-1.5 h-6 rounded-full bg-gradient-to-b ${themeStyles.gradient}`}></div>
-            )}
-          </Link>
+          </div>
 
-          {/* Nuevo enlace para Registro de Jugadores */}
-          <Link to="/registro-jugadores" 
-                className={`${linkClasses("/registro-jugadores")} group`} 
+          <Link to="/historial-solicitudes" 
+                className={linkClasses("/historial-solicitudes")} 
                 onClick={() => setIsOpen(false)}>
-            <div className={`${isActive("/registro-jugadores") 
+            <div className={`${isActive("/historial-solicitudes") 
               ? `p-1 rounded-full bg-gradient-to-r ${themeStyles.gradient}` 
               : "p-1 rounded-full transition-all duration-300 group-hover:bg-white/20"}`}>
-              <FaChild className={iconClasses} />
+              <FaAddressBook className={`${iconClasses} ${isActive("/historial-solicitudes") ? "" : "group-hover:scale-110 transition-transform duration-300"}`} />
             </div>
-            <span className="font-medium">Registro de Jugadores</span>
-            {isActive("/registro-jugadores") && (
+            <span className="font-medium">Mis Solicitudes</span>
+            {isActive("/historial-solicitudes") && (
               <div className={`ml-auto w-1.5 h-6 rounded-full bg-gradient-to-b ${themeStyles.gradient}`}></div>
             )}
           </Link>
         </nav>
-
-        {/* Footer con controles de tema y efectos hover */}
-        <div className="p-2 border-t border-white/10 space-y-2 overflow-visible">
-          <div className={`flex items-center justify-between p-2 rounded-lg bg-white/5 
-                         hover:bg-white/10 transition-colors duration-300`}>
-            <span className="font-medium">Modo Oscuro</span>
-            <ThemeToggle 
-              isDark={darkMode} 
-              toggleTheme={handleDarkModeToggle}
-            />
-          </div>
-          
-          <button 
-            onClick={() => setShowThemeSelector(!showThemeSelector)}
-            className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 
-                      w-full text-left group
-                      ${showThemeSelector 
-                        ? `bg-gradient-to-r ${themeStyles.gradient}` 
-                        : 'hover:bg-gradient-to-r hover:from-white/5 hover:to-white/20'}`}
-          >
-            <div className={`${showThemeSelector 
-              ? `p-1 rounded-full bg-white/20` 
-              : "p-1 rounded-full transition-all duration-300 group-hover:bg-white/20"}`}>
-              <FaCog className={`${iconClasses} ${showThemeSelector ? "animate-spin" : "group-hover:scale-110 transition-transform duration-300"}`} 
-                    style={{ animationDuration: '3s' }} />
-            </div>
-            <span className="font-medium">Personalización</span>
-            {showThemeSelector && (
-              <div className={`ml-auto w-1.5 h-6 rounded-full bg-white/50`}></div>
-            )}
-          </button>
-          
-          {/* Selector de Temas con animación y scroll mejorado */}
-          {showThemeSelector && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`mt-2 p-2 rounded-lg bg-gradient-to-br from-black/20 to-white/5 backdrop-blur-sm
-                        max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent`}
-            >
-              <ThemeSelector />
-            </motion.div>
-          )}
-        </div>
       </div>
     </>
   );
