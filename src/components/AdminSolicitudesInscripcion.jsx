@@ -29,7 +29,7 @@ const AdminSolicitudesInscripcion = () => {
           : '/admin/solicitudes-inscripcion';
           
         const response = await authService.api.get(endpoint);
-        console.log('Solicitude de escuela' + response.data)
+        //console.log('Solicitudes de escuela:', JSON.stringify(response.data, null, 2));
         setSolicitudes(response.data);
         
         // Obtenemos las escuelas únicas para el filtro
@@ -43,7 +43,7 @@ const AdminSolicitudesInscripcion = () => {
             }
             return acc;
           }, []);
-          
+          //console.log('Escuelas info: ' + JSON.stringify(escuelasInfo, null, 2))
           setEscuelasFiltro(escuelasInfo);
         } else {
           setEscuelaSeleccionada(escuelaId);
@@ -225,7 +225,9 @@ const AdminSolicitudesInscripcion = () => {
     
     // Filtro por escuela
     const pasaFiltroEscuela = escuelaSeleccionada === 'todas' || 
-                            (sol.escuelaId && sol.escuelaId._id === escuelaSeleccionada);
+                            (sol.escuelaId && 
+                             (sol.escuelaId._id === escuelaSeleccionada || 
+                              sol.escuelaId.identificador === escuelaSeleccionada));
     
     return pasaFiltroEstado && pasaFiltroEscuela;
   });

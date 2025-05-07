@@ -40,7 +40,6 @@ const RegistroNino = () => {
   const [municipiosDisponibles, setMunicipiosDisponibles] = useState([]);
   const { escuelaId } = useParams(); // Obtener el parámetro escuelaId
   const [ninosARegistrar, setNinosARegistrar] = useState([]);
-  const [modo, setModo] = useState('individual'); // 'individual' o 'multiple'
   const [solicitudEnviada, setSolicitudEnviada] = useState(false);
   const [codigoQR, setCodigoQR] = useState('');
 
@@ -279,177 +278,116 @@ const RegistroNino = () => {
   return (
     <div className="min-h-screen p-4 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 
                     dark:from-blue-900 dark:via-purple-900 dark:to-pink-900">
-      {/* Botones de modo */}
-      <div className="max-w-7xl mx-auto mb-4 flex justify-center">
-        <div className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-md flex">
-          <button
-            onClick={() => setModo('individual')}
-            className={`px-4 py-2 rounded-lg ${modo === 'individual' 
-              ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' 
-              : 'text-gray-700 dark:text-gray-300'}`}
-          >
-            Registro Individual
-          </button>
-          <button
-            onClick={() => setModo('multiple')}
-            className={`px-4 py-2 rounded-lg ${modo === 'multiple' 
-              ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' 
-              : 'text-gray-700 dark:text-gray-300'}`}
-          >
-            Registro Múltiple (Solicitud)
-          </button>
-        </div>
-      </div>
-      
       {/* Header y Botón de Agregar */}
       <div className="max-w-7xl mx-auto mb-8 flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
-          {modo === 'individual' ? 'Mis Jugadores Registrados' : 'Solicitud de Inscripción'}
+          Solicitud de Inscripción
         </h1>
         <button
           onClick={() => setShowModal(true)}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white
                      bg-gradient-to-r ${getGradient()} hover:opacity-90 transition-opacity`}
         >
-          <FaPlus /> {modo === 'individual' ? 'Registrar Nuevo Jugador' : 'Agregar Jugador a Solicitud'}
+          <FaPlus /> Agregar Jugador a Solicitud
         </button>
       </div>
       
       {/* Contenido específico del modo múltiple */}
-      {modo === 'multiple' && (
+      {solicitudEnviada ? (
+        <div className="max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
+          <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">
+            ¡Solicitud Enviada con Éxito!
+          </h2>
+          <p className="mb-6 text-gray-600 dark:text-gray-400">
+            Muestra este código QR al administrador para completar el proceso de inscripción.
+          </p>
+          
+          <div className="mb-6 flex justify-center">
+            <img src={codigoQR} alt="Código QR de la solicitud" className="w-64 h-64" />
+          </div>
+          
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            También puedes consultar el estado de tu solicitud en tu historial de solicitudes.
+          </p>
+          
+          <button
+            onClick={() => setSolicitudEnviada(false)}
+            className="mt-6 px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg"
+          >
+            Realizar nueva solicitud
+          </button>
+        </div>
+      ) : (
         <>
-          {solicitudEnviada ? (
-            <div className="max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
-              <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">
-                ¡Solicitud Enviada con Éxito!
+          {ninosARegistrar.length > 0 ? (
+            <div className="max-w-7xl mx-auto mb-8">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+                Jugadores a inscribir ({ninosARegistrar.length})
               </h2>
-              <p className="mb-6 text-gray-600 dark:text-gray-400">
-                Muestra este código QR al administrador para completar el proceso de inscripción.
-              </p>
-              
-              <div className="mb-6 flex justify-center">
-                <img src={codigoQR} alt="Código QR de la solicitud" className="w-64 h-64" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {ninosARegistrar.map((nino, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 relative"
+                  >
+                    <button 
+                      onClick={() => eliminarNinoLista(index)}
+                      className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                    >
+                      <FaTimes />
+                    </button>
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                        <FaChild className="text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                          {nino.nombre} {nino.apellidoPaterno}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          CURP: {nino.claveCURP || 'No proporcionado'}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Fecha: {new Date(nino.fechaNacimiento).toLocaleDateString()}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Género: {nino.genero}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
               
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                También puedes consultar el estado de tu solicitud en tu historial de solicitudes.
-              </p>
-              
-              <button
-                onClick={() => setSolicitudEnviada(false)}
-                className="mt-6 px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg"
-              >
-                Realizar nueva solicitud
-              </button>
+              <div className="flex justify-center mt-6">
+                <button
+                  onClick={enviarSolicitudMultiple}
+                  disabled={loading}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-lg text-white font-medium
+                            bg-gradient-to-r from-green-500 to-green-600 hover:opacity-90 transition-opacity
+                            ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <FaQrcode />
+                  {loading ? 'Enviando...' : 'Enviar Solicitud y Generar QR'}
+                </button>
+              </div>
             </div>
           ) : (
-            <>
-              {ninosARegistrar.length > 0 ? (
-                <div className="max-w-7xl mx-auto mb-8">
-                  <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
-                    Jugadores a inscribir ({ninosARegistrar.length})
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {ninosARegistrar.map((nino, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 relative"
-                      >
-                        <button 
-                          onClick={() => eliminarNinoLista(index)}
-                          className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                        >
-                          <FaTimes />
-                        </button>
-                        <div className="flex items-start gap-4">
-                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                            <FaChild className="text-white" />
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-                              {nino.nombre} {nino.apellidoPaterno}
-                            </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              CURP: {nino.claveCURP || 'No proporcionado'}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              Fecha: {new Date(nino.fechaNacimiento).toLocaleDateString()}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              Género: {nino.genero}
-                            </p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                  
-                  <div className="flex justify-center mt-6">
-                    <button
-                      onClick={enviarSolicitudMultiple}
-                      disabled={loading}
-                      className={`flex items-center gap-2 px-6 py-3 rounded-lg text-white font-medium
-                                bg-gradient-to-r from-green-500 to-green-600 hover:opacity-90 transition-opacity
-                                ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      <FaQrcode />
-                      {loading ? 'Enviando...' : 'Enviar Solicitud y Generar QR'}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
-                  <FaChild className="text-gray-300 dark:text-gray-600 text-6xl mx-auto mb-4" />
-                  <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
-                    No hay jugadores en la solicitud
-                  </h2>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Haz clic en "Agregar Jugador a Solicitud" para comenzar a agregar jugadores a tu solicitud.
-                  </p>
-                </div>
-              )}
-            </>
+            <div className="max-w-7xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
+              <FaChild className="text-gray-300 dark:text-gray-600 text-6xl mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+                No hay jugadores en la solicitud
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                Haz clic en "Agregar Jugador a Solicitud" para comenzar a agregar jugadores a tu solicitud.
+              </p>
+            </div>
           )}
         </>
       )}
       
-      {/* Grid de Jugadores (solo en modo individual) */}
-      {modo === 'individual' && (
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {jugadores.map(jugador => (
-            <motion.div
-              key={jugador._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
-                    {jugador.nombre} {jugador.apellidoPaterno}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    CURP: {jugador.claveCURP}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                  <FaChild className="text-white text-xl" />
-                </div>
-              </div>
-              <div className="mt-4 space-y-2">
-                <InfoRow label="Fecha de Nacimiento" value={new Date(jugador.fechaNacimiento).toLocaleDateString()} />
-                <InfoRow label="Género" value={jugador.genero} />
-                <InfoRow label="Categoría" value={jugador.categoria} />
-                <InfoRow label="Tipo de Sangre" value={jugador.tipoSangre} />
-                <InfoRow label="# Camiseta" value={jugador.numeroCamiseta} />
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
-
       {/* Modal de Registro */}
       <AnimatePresence>
         {showModal && (
@@ -468,9 +406,7 @@ const RegistroNino = () => {
               <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className={`text-2xl font-bold bg-gradient-to-r ${getGradient()} bg-clip-text text-transparent`}>
-                    {modo === 'individual' 
-                      ? 'Registro de Jugador' 
-                      : 'Agregar Jugador a Solicitud'}
+                    Agregar Jugador a Solicitud
                   </h2>
                   <button
                     onClick={() => setShowModal(false)}
@@ -483,11 +419,7 @@ const RegistroNino = () => {
                 <form 
                   onSubmit={(e) => {
                     e.preventDefault();
-                    if (modo === 'individual') {
-                      handleSubmit(e);
-                    } else {
-                      agregarNinoALista();
-                    }
+                    agregarNinoALista();
                   }} 
                   className="grid grid-cols-1 md:grid-cols-3 gap-4"
                 >
@@ -679,11 +611,7 @@ const RegistroNino = () => {
                          ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                     tabIndex={16}
                   >
-                    {loading 
-                      ? 'Procesando...' 
-                      : (modo === 'individual' 
-                         ? 'Registrar Jugador' 
-                         : 'Agregar a la Solicitud')}
+                    {loading ? 'Procesando...' : 'Agregar a la Solicitud'}
                   </button>
                 </form>
               </div>
