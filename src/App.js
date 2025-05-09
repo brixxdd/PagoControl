@@ -37,6 +37,10 @@ import EscuelaRouteGuard from './components/EscuelaRouteGuard';
 import useClearEscuelaContext from './hooks/useClearEscuelaContext';
 import SolicitudesHistorial from './components/SolicitudesHistorial';
 import AdminSolicitudesInscripcion from './components/AdminSolicitudesInscripcion';
+import SolicitudPago from './components/SolicitudPago';
+import HistorialPagos from './components/HistorialPagos';
+import AdminPagos from './components/AdminPagos';
+import ProcesarPago from './components/ProcesarPago';
 
 const App = () => {
   const { 
@@ -486,6 +490,42 @@ const App = () => {
                                   element={
                                     isAuthenticated && isAdmin 
                                       ? <AdminSolicitudesInscripcion /> 
+                                      : <Navigate to="/signin" />
+                                  } 
+                                />
+
+                                <Route 
+                                  path="/pagos" 
+                                  element={
+                                    isAuthenticated && !isAdmin 
+                                      ? <HistorialPagos /> 
+                                      : <Navigate to="/signin" />
+                                  } 
+                                />
+
+                                <Route 
+                                  path="/solicitud-pago" 
+                                  element={
+                                    isAuthenticated && !isAdmin 
+                                      ? <SolicitudPago /> 
+                                      : <Navigate to="/signin" />
+                                  } 
+                                />
+
+                                <Route 
+                                  path="/admin/pagos" 
+                                  element={
+                                    isAuthenticated && isAdmin 
+                                      ? <AdminPagos /> 
+                                      : <Navigate to="/signin" />
+                                  } 
+                                />
+
+                                <Route 
+                                  path="/admin/procesar-pago/:solicitudId" 
+                                  element={
+                                    isAuthenticated && isAdmin 
+                                      ? <ProcesarPago /> 
                                       : <Navigate to="/signin" />
                                   } 
                                 />

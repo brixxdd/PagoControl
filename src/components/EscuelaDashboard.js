@@ -1,9 +1,17 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { FaCalendarAlt, FaMoneyBillWave, FaTshirt, FaRunning } from 'react-icons/fa';
+import { authService } from '../services/authService';
 
 const EscuelaDashboard = ({ escuela }) => {
+
+  // Agregar al estado
+  const [estadoPagos, setEstadoPagos] = useState({
+    proximoPeriodo: '',
+    ninosPendientes: 0,
+    ninos: []
+  });
   // Calcular fechas de pago - para el ejemplo usaremos fechas estáticas
   const fechasPago = useMemo(() => {
     const fechaActual = new Date();
@@ -15,6 +23,22 @@ const EscuelaDashboard = ({ escuela }) => {
       segundoPeriodo: `15-20 de ${new Intl.DateTimeFormat('es', { month: 'long' }).format(new Date(año, mes))}`
     };
   }, []);
+
+  // Mueve el useEffect aquí, antes de cualquier lógica condicional
+  useEffect(() => {
+    if (escuela && escuela._id) {
+      const cargarEstadoPagos = async () => {
+        try {
+          const response = await authService.api.get(`/api/estado-pagos?escuelaId=${escuela._id}`);
+          setEstadoPagos(response.data);
+        } catch (error) {
+          console.error('Error al cargar estado de pagos:', error);
+        }
+      };
+      
+      cargarEstadoPagos();
+    }
+  }, [escuela]);
   
   // Información de cuotas
   const infoCuotas = {
@@ -256,6 +280,79 @@ const EscuelaDashboard = ({ escuela }) => {
               </div>
             )}
           </Card>
+        </div>
+        
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">Estado de Pagos</h2>
+          
+          <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="flex flex-col md:flex-row justify-between gap-6">
+              <div className="text-center">
+                <h3 className="text-lg font-medium mb-2">Próximo Período de Pago</h3>
+                <div className="bg-blue-50 text-blue-700 py-2 px-4 rounded-lg">
+                  {estadoPagos.proximoPeriodo || 'Cargando...'}
+                </div>
+              </div>
+              
+              <div className="text-center">
+                <h3 className="text-lg font-medium mb-2">Niños con Pago Pendiente</h3>
+                <div className={`py-2 px-4 rounded-lg ${
+                  estadoPagos.ninosPendientes > 0 
+                    ? 'bg-red-50 text-red-700' 
+                    : 'bg-green-50 text-green-700'
+                }`}>
+                  {estadoPagos.ninosPendientes || 0} niños
+                </div>
+              </div>
+            </div>
+            
+            {estadoPagos.ninos && estadoPagos.ninos.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-lg font-medium mb-3">Mis Niños</h3>
+                
+                <div className="space-y-4">
+                  {estadoPagos.ninos.map(nino => (
+                    <div key={nino._id} className="flex justify-between items-center p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{nino.nombre} {nino.apellidoPaterno}</p>
+                        <p className="text-sm text-gray-600">Mensualidad: ${nino.precio}</p>
+                      </div>
+                      
+                      <div>
+                        {nino.pagoActualizado ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                            Al día
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                            </svg>
+                            Pendiente
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-6 flex justify-end">
+                  <button
+                    onClick={() => window.location.href = `/escuela/${escuela._id}/solicitud-pago`}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Generar Solicitud de Pago
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </motion.div>
     </div>

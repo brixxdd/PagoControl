@@ -5,6 +5,8 @@ import { toast } from 'react-toastify';
 import { FaQrcode, FaEye, FaSave, FaArrowLeft, FaCheck, FaTimes, FaEdit } from 'react-icons/fa';
 import QRScanner from './QRScanner';
 import { handleQrScan, handleQrScanScholl } from '../utils/qrHandlers';
+import { alertaError, alertaExito, alertaAdvertencia } from './Alert';
+
 
 const AdminSolicitudesInscripcion = () => {
   const [solicitudes, setSolicitudes] = useState([]);
@@ -19,43 +21,39 @@ const AdminSolicitudesInscripcion = () => {
   const { escuelaId } = useParams();
   const navigate = useNavigate();
   
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        // Si hay un escuelaId en los parámetros, lo usamos para filtrar
-        const endpoint = escuelaId 
-          ? `/admin/solicitudes-inscripcion/escuela/${escuelaId}`
-          : '/admin/solicitudes-inscripcion';
-          
-        const response = await authService.api.get(endpoint);
-        //console.log('Solicitudes de escuela:', JSON.stringify(response.data, null, 2));
-        setSolicitudes(response.data);
-        // Obtenemos las escuelas únicas para el filtro
-        if (!escuelaId) {
-          const escuelasInfo = response.data.reduce((acc, sol) => {
-            if (sol.escuelaId && !acc.some(e => e._id === sol.escuelaId._id)) {
-              acc.push({
-                _id: sol.escuelaId._id,
-                nombre: sol.escuelaId.nombre
-              });
-            }
-            return acc;
-          }, []);
-          //console.log('Escuelas info: ' + JSON.stringify(escuelasInfo, null, 2))
-          setEscuelasFiltro(escuelasInfo);
-        } else {
-          setEscuelaSeleccionada(escuelaId);
-        }
-      } catch (error) {
-        console.error('Error al obtener solicitudes:', error);
-        toast.error('Error al cargar solicitudes de inscripción');
-      } finally {
-        setLoading(false);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const endpoint = escuelaId 
+        ? `/admin/solicitudes-inscripcion/escuela/${escuelaId}`
+        : '/admin/solicitudes-inscripcion';
+        
+      const response = await authService.api.get(endpoint);
+      setSolicitudes(response.data);
+      if (!escuelaId) {
+        const escuelasInfo = response.data.reduce((acc, sol) => {
+          if (sol.escuelaId && !acc.some(e => e._id === sol.escuelaId._id)) {
+            acc.push({
+              _id: sol.escuelaId._id,
+              nombre: sol.escuelaId.nombre
+            });
+          }
+          return acc;
+        }, []);
+        setEscuelasFiltro(escuelasInfo);
+      } else {
+        setEscuelaSeleccionada(escuelaId);
       }
-    };
-    
-    fetchData();
+    } catch (error) {
+      console.error('Error al obtener solicitudes:', error);
+      alertaError('Error al cargar solicitudes de inscripción.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    fetchData(); // Llamar a fetchData al montar el componente
   }, [escuelaId]);
   
   useEffect(() => {
@@ -68,6 +66,7 @@ const AdminSolicitudesInscripcion = () => {
         esUniforme: false
       }));
       setPrecios(preciosIniciales);
+      setComentarios(selectedSolicitud.observaciones)
     }
   }, [selectedSolicitud]);
   
@@ -89,7 +88,7 @@ const AdminSolicitudesInscripcion = () => {
         }
     } catch (error) {
       console.error('Error al obtener solicitud:', error);
-      toast.error('Solicitud no encontrada');
+      alertaError('Solicitud no encontrada.');
     }
   };
   
@@ -141,50 +140,31 @@ const AdminSolicitudesInscripcion = () => {
     try {
       // Validar que se hayan asignado precios si se va a aprobar
       if (estado === 'aprobada') {
-        const faltanPrecios = precios.some(item => item.precio <= 0);
+        const faltanPrecios = precios.some(item => item.precio < 0);
         if (faltanPrecios) {
-          return toast.warning('Debes asignar un precio mayor a 0 a cada jugador antes de aprobar');
+          return alertaAdvertencia('Debes asignar un precio mayor a 0 a cada jugador antes de aprobar');
         }
       }
       
-      // Crear un array de niños con todos los datos requeridos
-      /*const ninosConDatos = selectedSolicitud.ninos.map((nino, index) => ({
-        ...nino,
-        precio: precios[index]?.precio || 0, // Asignar el precio correspondiente
-        esUniforme: precios[index]?.esUniforme || false // Asignar si incluye uniforme
-      }));
-      console.log('Datos de niños a enviar:', ninosConDatos);*/
-      const response = await authService.api.put(
+      await authService.api.put(
         `/admin/solicitud/${selectedSolicitud._id}`,
         {
           estado,
           comentarios,
           preciosPorNino: precios,
           precioTotal: calcularPrecioTotal(),
-          //ninos: ninosConDatos // Incluir los datos de los niños
         }
       );
       
-      if (response.data) {
-        // Actualizar la lista
-        setSolicitudes(solicitudes.map(sol => 
-          sol._id === selectedSolicitud._id ? { 
-            ...sol, 
-            estado, 
-            comentarios,
-            preciosPorNino: precios,
-            precioTotal: calcularPrecioTotal(),
-            fechaRespuesta: new Date()
-          } : sol
-        ));
-        
-        setSelectedSolicitud(null);
-        setComentarios('');
-        toast.success(`Solicitud ${estado === 'aprobada' ? 'aprobada' : 'rechazada'} correctamente`);
-      }
+      // Reejecutar el useEffect para obtener los datos actualizados
+      fetchData(); // Llamamos a la función fetchData para actualizar la lista
+      
+      setSelectedSolicitud(null);
+      setComentarios('');
+      alertaExito(`Solicitud ${estado === 'aprobada' ? 'aprobada' : 'rechazada'} correctamente`);
     } catch (error) {
       console.error('Error al actualizar solicitud:', error);
-      toast.error('Error al procesar la solicitud');
+      alertaError('Error al procesar la solicitud');
     }
   };
   
@@ -463,12 +443,17 @@ const AdminSolicitudesInscripcion = () => {
                     Comentarios para el tutor
                   </h3>
                   <textarea
-                    value={comentarios}
-                    onChange={(e) => setComentarios(e.target.value)}
+                    value={selectedSolicitud.estado === 'pendiente' ? comentarios : selectedSolicitud.observaciones}
+                    onChange={(e) => {
+                      if (selectedSolicitud.estado === 'pendiente') {
+                        setComentarios(e.target.value);
+                      }
+                    }}
                     placeholder="Ingresa aquí cualquier comentario sobre la solicitud..."
                     className="w-full h-32 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 
                              bg-white dark:bg-gray-700 text-gray-900 dark:text-white
                              focus:ring-blue-500 focus:border-blue-500"
+                    disabled={selectedSolicitud.estado !== 'pendiente'}
                   />
                 </div>
               </div>

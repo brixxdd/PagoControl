@@ -122,13 +122,16 @@ const ninoSchema = new mongoose.Schema({
     ref: 'Escuela',
     required: false
   },
-  precio: { 
-    type: Number, 
-    default: 0 
+  precio: {
+    type: Number,
+    default: 250
   },
-  incluyeUniforme: { 
-    type: Boolean, 
-    default: false 
+  incluyeUniforme: {
+    type: Boolean,
+    default: false
+  },
+  fechaUltimoPago: {
+    type: Date
   }
 }, {
   timestamps: true

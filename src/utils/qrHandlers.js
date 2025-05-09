@@ -90,3 +90,50 @@ export const handleQrScanScholl = async (qrData, solicitudes, setSelectedSolicit
         alertaError('Código QR inválido.');
     }
 };
+
+export const handlePagoQrScan = async (qrData, escuelaId, authService, setSolicitudSeleccionada) => {
+  try {
+    console.log("Escaneo de pago por Admin:", qrData);
+    
+    // 1) Extraer el ID de la solicitud del código QR
+    const raw = qrData.solicitudId || qrData; 
+    const decoded = decodeURIComponent(raw);
+    let solicitudId;
+    try {
+        solicitudId = new URL(decoded).pathname.split('/').pop();
+    } catch {
+        solicitudId = decoded;
+    }
+    
+    if (!solicitudId || solicitudId.length !== 24) {
+      throw new Error('ID de solicitud inválido');
+    }
+    
+    // 2) Obtener la solicitud de pago
+    const response = await authService.api.get(`/api/admin/solicitud-pago/${solicitudId}`);
+    
+    // 3) Verificar que pertenezca a la escuela actual
+    if (response.data && response.data.escuelaId) {
+      const solicitudEscuelaId = 
+        typeof response.data.escuelaId === 'object' ? 
+        response.data.escuelaId._id || response.data.escuelaId.identificador : 
+        response.data.escuelaId;
+      
+      if (solicitudEscuelaId !== escuelaId && response.data.escuelaId.identificador !== escuelaId) {
+        alertaError('La solicitud no pertenece a esta escuela');
+      }else{
+        setSolicitudSeleccionada(response.data);
+        alertaExito('Solicitud de pago escaneada correctamente');
+      }
+    } else {
+      throw new Error('Formato de respuesta inválido');
+    }
+  } catch (error) {
+    console.error('Error al procesar QR:', error);
+    alertaError(
+      error.response?.data?.message 
+        || 'Error al procesar QR'
+    );
+  }
+  
+};

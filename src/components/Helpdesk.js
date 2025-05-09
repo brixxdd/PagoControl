@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { authService } from '../services/authService';
 import { useNavigate, useParams } from 'react-router-dom';
 import EscuelaForm from './EscuelaForm';
+import { alertaError, alertaExito } from './Alert';
 
 const Helpdesk = () => {
   const { isAdmin } = useAuth();
@@ -85,6 +86,7 @@ const Helpdesk = () => {
       navigate('/helpdesk');
     } catch (error) {
       console.error('Error al guardar escuela:', error);
+      alertaError(`ERROR: ${error.response?.data?.message ?? 'Revise campos'}`);
     }
   };
 

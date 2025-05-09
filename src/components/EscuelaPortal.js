@@ -12,6 +12,11 @@ import AdminSidebarSchool from './AdminSidebarSchool';
 import SolicitudesHistorial from './SolicitudesHistorial';
 import { getCurrentThemeStyles } from '../themes/themeConfig';
 import './common/common.css'
+import SolicitudPago from './SolicitudPago';
+import HistorialPagos from './HistorialPagos';
+import AdminPagos from './AdminPagos';
+import ProcesarPago from './ProcesarPago';
+import VerPago from './VerPago';
 
 
 
@@ -165,7 +170,46 @@ const EscuelaPortal = ({ isAuthenticated, isAdmin }) => {
                     : <Navigate to={`/escuela/${escuelaId}/signin`} replace />
                 } 
               />
-
+              <Route 
+                path="/pagos" 
+                element={
+                  isAuthenticated && !isAdmin 
+                    ? <HistorialPagos /> 
+                    : <Navigate to={`/escuela/${escuelaId}/signin`} replace />
+                } 
+              />
+              <Route 
+                path="/solicitud-pago" 
+                element={
+                  isAuthenticated && !isAdmin 
+                    ? <SolicitudPago /> 
+                    : <Navigate to={`/escuela/${escuelaId}/signin`} replace />
+                } 
+              />
+              <Route 
+                path="/admin/pagos" 
+                element={
+                  isAuthenticated && isAdmin 
+                    ? <AdminPagos /> 
+                    : <Navigate to={`/escuela/${escuelaId}/signin`} replace />
+                } 
+              />
+              <Route 
+                path="/admin/procesar-pago/:solicitudId" 
+                element={
+                  isAuthenticated && isAdmin 
+                    ? <ProcesarPago /> 
+                    : <Navigate to={`/escuela/${escuelaId}/signin`} replace />
+                } 
+              />
+              <Route 
+                path="/admin/ver-pago/:pagoId" 
+                element={
+                  isAuthenticated && isAdmin 
+                    ? <VerPago /> 
+                    : <Navigate to={`/escuela/${escuelaId}/signin`} replace />
+                } 
+              />
               <Route path="/signin" element={<SignIn escuelaPortal={true} escuela={escuela} />} />
               <Route path="*" element={<Navigate to={`/escuela/${escuelaId}`} replace />} />
             </Routes>

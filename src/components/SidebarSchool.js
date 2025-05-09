@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { FaHome, FaFileUpload, FaBars, FaTimes, FaCog, FaChild } from 'react-icons/fa';
+import { FaHome, FaFileUpload, FaBars, FaTimes, FaCog, FaChild, FaMoneyBillWave, FaQrcode } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { useEscuelaTheme } from '../contexts/EscuelaTemaContext';
 
@@ -30,6 +30,21 @@ const SidebarSchool = () => {
          hover:scale-105 hover:shadow-md hover:shadow-black/10`;
   
   const iconClasses = "text-xl";
+
+  const navigationLinks = [
+    {
+      name: 'Mis Pagos',
+      href: `/escuela/${escuelaId}/pagos`,
+      icon: FaMoneyBillWave,
+      current: location.pathname === `/escuela/${escuelaId}/pagos`
+    },
+    {
+      name: 'Solicitar Pago',
+      href: `/escuela/${escuelaId}/solicitud-pago`,
+      icon: FaQrcode,
+      current: location.pathname === `/escuela/${escuelaId}/solicitud-pago`
+    }
+  ];
 
   return (
     <>
@@ -118,6 +133,19 @@ const SidebarSchool = () => {
             </div>
             <span className="font-medium">Solicitudes</span>
           </Link>
+          {navigationLinks.map((link, index) => (
+            <Link 
+              key={index}
+              to={link.href}
+              className={linkClasses(link.href)} 
+              onClick={() => setIsOpen(false)}
+            >
+              <div className={`${isActive(link.href) ? `p-1 rounded-full` : "p-1 rounded-full transition-all duration-300 group-hover:bg-white/20"}`}>
+                <link.icon className={iconClasses} />
+              </div>
+              <span className="font-medium">{link.name}</span>
+            </Link>
+          ))}
         </nav>
       </div>
     </>

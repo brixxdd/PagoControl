@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { FaHome, FaFileUpload, FaBars, FaTimes, FaCog, FaChild } from 'react-icons/fa';
+import { FaHome, FaFileUpload, FaBars, FaTimes, FaCog, FaChild, FaMoneyBillWave, FaFileInvoiceDollar } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { useEscuelaTheme } from '../contexts/EscuelaTemaContext';
 
@@ -30,6 +30,17 @@ const SidebarSchool = () => {
          hover:scale-105 hover:shadow-md hover:shadow-black/10`;
   
   const iconClasses = "text-xl";
+
+  // Agregar en el arreglo de enlaces de navegación
+  const navigationLinks = [
+    // ... otros enlaces existentes
+    {
+      name: 'Gestión de Pagos',
+      href: `/escuela/${escuelaId}/admin/pagos`,
+      icon: FaMoneyBillWave,
+      current: location.pathname === `/escuela/${escuelaId}/admin/pagos`
+    }
+  ];
 
   return (
     <>
@@ -117,6 +128,20 @@ const SidebarSchool = () => {
             </div>
             <span className="font-medium">Solicitudes de {escuelaId}</span>
           </Link>
+
+          {navigationLinks.map((link, index) => (
+            <Link 
+              key={index}
+              to={link.href}
+              className={linkClasses(link.href)} 
+              onClick={() => setIsOpen(false)}
+            >
+              <div className={`${isActive(link.href) ? `p-1 rounded-full` : "p-1 rounded-full transition-all duration-300 group-hover:bg-white/20"}`}>
+                <link.icon className={iconClasses} />
+              </div>
+              <span className="font-medium">{link.name}</span>
+            </Link>
+          ))}
         </nav>
       </div>
     </>

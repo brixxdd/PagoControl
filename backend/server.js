@@ -37,6 +37,12 @@ const Escuela = require('./models/Escuela');
 const escuelaRoutes = require('./routes/escuelaRoutes');
 const SolicitudInscripcion = require('./models/SolicitudInscripcion');
 const { generateQRCode } = require('./utils/qrService');
+const pagoRoutes = require('./routes/pagoRoutes');
+const Pago = require('./models/Pago');
+const SolicitudPago = require('./models/SolicitudPago');
+const actualizacionService = require('./services/actualizacionService');
+const notificacionService = require('./services/notificacionService');
+
 
 
 
@@ -1386,7 +1392,7 @@ app.get('/api/escuelas-registradas', verifyToken, async (req, res) => {
 
 
 
-//nuevas cosas
+//nuevas cosas para inscripcion
 // Ruta para crear una solicitud de inscripción
 app.post('/auth/solicitud-inscripcion', verifyToken, async (req, res) => {
   const session = await mongoose.startSession();
@@ -1610,7 +1616,7 @@ app.put('/admin/solicitud/:id', verifyToken, async (req, res) => {
           cirugias: ninoData.cirugias,
           afecciones: ninoData.afecciones,
           nombrePadres: ninoData.nombrePadres,
-          incluyeUniforme: ninoData.esUniforme // Asumiendo que este campo se envía correctamente
+          incluyeUniforme: ninoData.esUniforme || false // Asumiendo que este campo se envía correctamente
         });
         console.log('Nino a insertar: ',nuevoNino)
         const ninoGuardado = await nuevoNino.save();
@@ -1704,6 +1710,32 @@ app.get('/admin/solicitudes-inscripcion/escuela/:escuelaId', verifyToken, async 
       error: error.message 
     });
   }
+});
+
+app.use('/api', pagoRoutes);
+
+/* Programar la actualización de precios cada noche a las 2 AM
+cron.schedule('0 2 * * *', async () => {
+  console.log('Ejecutando actualización automática de precios...');
+  await actualizacionService.actualizarPreciosMensualidad();
+});*/
+
+// Programar la verificación de pagos pendientes cada día a las 8 AM
+cron.schedule('0 8 * * *', async () => {
+  console.log('Verificando pagos pendientes...');
+  const pendientes = await actualizacionService.verificarPagosPendientes();
+  
+  // Aquí se podría implementar un sistema de notificaciones
+  // para avisar a los administradores sobre los pagos pendientes
+});
+
+// Verificación específica los días 2 y 16 de cada mes para notificar 
+// a los tutores sobre el vencimiento del período de pago
+cron.schedule('0 9 2,16 * *', async () => {
+  console.log('Enviando recordatorios de pago...');
+  // Lógica para enviar notificaciones a tutores con pagos pendientes
+  await notificacionService.enviarRecordatoriosPago();
+
 });
 
 

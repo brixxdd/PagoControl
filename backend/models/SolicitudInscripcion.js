@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Nino = require('./Nino'); // Asegúrate de importar el modelo Nino
 
 const solicitudInscripcionSchema = new mongoose.Schema({
   tutorId: { 
@@ -17,7 +18,16 @@ const solicitudInscripcionSchema = new mongoose.Schema({
     apellidoPaterno: { type: String, required: true },
     apellidoMaterno: { type: String, required: true },
     fechaNacimiento: { type: Date, required: true },
-    claveCURP: { type: String, required: true },
+    claveCURP: { 
+      type: String, 
+      required: true,
+      validate: {
+        validator: function(v) {
+          return /^[A-Z0-9]{18}$/.test(v);
+        },
+        message: 'La CURP debe tener exactamente 18 caracteres alfanuméricos'
+      }
+    },
     genero: {
       type: String,
       required: true,
@@ -107,5 +117,23 @@ const solicitudInscripcionSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Middleware para verificar unicidad de CURP antes de guardar
+/*solicitudInscripcionSchema.pre('validate', async function(next) {
+  const curps = this.ninos.map(nino => nino.claveCURP);
+  const uniqueCurps = new Set(curps);
+  
+  if (curps.length !== uniqueCurps.size) {
+    return next(new Error('Las CURPs deben ser únicas entre los niños.'));
+  }
+  
+  // Verificar que las CURPs no existan ya en la colección de Nino
+  const existingNinos = await Nino.find({ claveCURP: { $in: curps } });
+  if (existingNinos.length > 0) {
+    return next(new Error('Una o más CURPs ya están registradas en la base de datos.'));
+  }
+  
+  next();
+});*/
 
 module.exports = mongoose.model('SolicitudInscripcion', solicitudInscripcionSchema);
