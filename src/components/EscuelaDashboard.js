@@ -1,11 +1,12 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { FaCalendarAlt, FaMoneyBillWave, FaTshirt, FaRunning } from 'react-icons/fa';
 import { authService } from '../services/authService';
 
 const EscuelaDashboard = ({ escuela }) => {
 
+  const { escuelaId } = useParams();
   // Agregar al estado
   const [estadoPagos, setEstadoPagos] = useState({
     proximoPeriodo: '',
@@ -26,10 +27,10 @@ const EscuelaDashboard = ({ escuela }) => {
 
   // Mueve el useEffect aquí, antes de cualquier lógica condicional
   useEffect(() => {
-    if (escuela && escuela._id) {
+    if (escuela && escuela.identificador) {
       const cargarEstadoPagos = async () => {
         try {
-          const response = await authService.api.get(`/api/estado-pagos?escuelaId=${escuela._id}`);
+          const response = await authService.api.get(`/api/estado-pagos?escuelaId=${escuela.identificador}`);
           setEstadoPagos(response.data);
         } catch (error) {
           console.error('Error al cargar estado de pagos:', error);
@@ -151,11 +152,10 @@ const EscuelaDashboard = ({ escuela }) => {
               title="Días de Entrenamiento"
             >
               <p className="font-semibold">
-  {escuela.diasEntrenamiento?.length
-    ? escuela.diasEntrenamiento.join(' y ')
-    : 'Martes y Jueves'}
-</p>
-
+              {escuela.diasEntrenamiento?.length
+                ? escuela.diasEntrenamiento.join(' y ')
+                : 'Martes y Jueves'}
+              </p>
               <p className="mt-1">Horario: 4:00 PM - 6:00 PM</p>
             </InfoItem>
             
@@ -315,7 +315,7 @@ const EscuelaDashboard = ({ escuela }) => {
                     <div key={nino._id} className="flex justify-between items-center p-3 border rounded-lg">
                       <div>
                         <p className="font-medium">{nino.nombre} {nino.apellidoPaterno}</p>
-                        <p className="text-sm text-gray-600">Mensualidad: ${nino.precio}</p>
+                        <p className="text-sm text-gray-600">Mensualidad: ${nino.precio || '250'}</p>
                       </div>
                       
                       <div>
@@ -340,15 +340,15 @@ const EscuelaDashboard = ({ escuela }) => {
                 </div>
                 
                 <div className="mt-6 flex justify-end">
-                  <button
-                    onClick={() => window.location.href = `/escuela/${escuela._id}/solicitud-pago`}
+                  <Link
+                    to={`/escuela/${escuela.identificador}/solicitud-pago`}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
                     Generar Solicitud de Pago
-                  </button>
+                  </Link>
                 </div>
               </div>
             )}

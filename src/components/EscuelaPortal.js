@@ -17,6 +17,7 @@ import HistorialPagos from './HistorialPagos';
 import AdminPagos from './AdminPagos';
 import ProcesarPago from './ProcesarPago';
 import VerPago from './VerPago';
+import AdminEscuelaDashboard from './AdminEscuelaDashboard';
 
 
 
@@ -138,9 +139,11 @@ const EscuelaPortal = ({ isAuthenticated, isAdmin }) => {
           {/* Contenido principal - Aquí irán las rutas específicas */}
           <div className="flex-1">
             <Routes>
-              <Route path="/" element={
+            <Route path="/" element={
                 isAuthenticated ? 
-                  <Navigate to={`/escuela/${escuelaId}/dashboard`} replace /> : 
+                  isAdmin ?
+                    <Navigate to={`/escuela/${escuelaId}/admin/dashboard`} replace /> : 
+                    <Navigate to={`/escuela/${escuelaId}/dashboard`} replace /> : 
                   <Navigate to={`/escuela/${escuelaId}/signin`} replace />
               } />
               <Route path="/dashboard" element={
@@ -183,6 +186,14 @@ const EscuelaPortal = ({ isAuthenticated, isAdmin }) => {
                 element={
                   isAuthenticated && !isAdmin 
                     ? <SolicitudPago /> 
+                    : <Navigate to={`/escuela/${escuelaId}/signin`} replace />
+                } 
+              />
+              <Route 
+                path="/admin/dashboard" 
+                element={
+                  isAuthenticated && isAdmin 
+                    ? <AdminEscuelaDashboard /> 
                     : <Navigate to={`/escuela/${escuelaId}/signin`} replace />
                 } 
               />
