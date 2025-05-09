@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FaQrcode, FaEye, FaSave, FaArrowLeft, FaCheck, FaTimes, FaEdit } from 'react-icons/fa';
 import QRScanner from './QRScanner';
+import { handleQrScan, handleQrScanScholl } from '../utils/qrHandlers';
 
 const AdminSolicitudesInscripcion = () => {
   const [solicitudes, setSolicitudes] = useState([]);
@@ -22,7 +23,6 @@ const AdminSolicitudesInscripcion = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
         // Si hay un escuelaId en los parámetros, lo usamos para filtrar
         const endpoint = escuelaId 
           ? `/admin/solicitudes-inscripcion/escuela/${escuelaId}`
@@ -31,7 +31,6 @@ const AdminSolicitudesInscripcion = () => {
         const response = await authService.api.get(endpoint);
         //console.log('Solicitudes de escuela:', JSON.stringify(response.data, null, 2));
         setSolicitudes(response.data);
-        
         // Obtenemos las escuelas únicas para el filtro
         if (!escuelaId) {
           const escuelasInfo = response.data.reduce((acc, sol) => {
@@ -62,6 +61,7 @@ const AdminSolicitudesInscripcion = () => {
   useEffect(() => {
     // Al seleccionar una solicitud, inicializar los precios para cada niño
     if (selectedSolicitud) {
+      //console.log('Solicitud seleccionada: ' + JSON.stringify(selectedSolicitud, null, 2))
       const preciosIniciales = selectedSolicitud.ninos.map((nino, index) => ({
         ninoIndex: index,
         precio: nino.precio || 0,
@@ -71,61 +71,22 @@ const AdminSolicitudesInscripcion = () => {
     }
   }, [selectedSolicitud]);
   
-  /*const handleQrScan = (qrData) => {
-    try {
-      // Extraer la URL o el ID de la solicitud del código QR
-      const solicitudId = qrData.solicitudId || qrData.id; // Asegúrate de que el formato sea correcto
-
-      if (solicitudId) {
-        const solicitud = solicitudes.find(s => s._id === solicitudId);
-        
-        if (solicitud) {
-          setSelectedSolicitud(solicitud);
-          setShowQrScanner(false);
-        } else {
-          // Si no lo encontramos en los ya cargados, intentar obtenerlo del servidor
-          fetchSolicitudById(solicitudId);
-        }
-      }
-    } catch (error) {
-      console.error('Error al procesar QR:', error);
-      toast.error('Código QR inválido');
-    }
-  };*/
-  const handleQrScan = (qrData) => {
-    try {
-      // 1) decode + extraer el ID
-      const raw = qrData.solicitudId || qrData; 
-      const decoded = decodeURIComponent(raw);
-      let id;
-      try {
-        id = new URL(decoded).pathname.split('/').pop();
-      } catch {
-        id = decoded;
-      }
-  
-      // 2) buscar localmente o en el servidor
-      const found = solicitudes.find(s => s._id === id);
-      if (found) {
-        setSelectedSolicitud(found);
-        setShowQrScanner(false);
-      } else {
-        fetchSolicitudById(id);
-      }
-    } catch (error) {
-      console.error('Error al procesar QR:', error);
-      toast.error('Código QR inválido');
+  const handleQrScanWrapper = (qrData) => {
+    if (escuelaId) {
+      // Si estamos en el portal de una escuela, usamos la función específica
+      handleQrScanScholl(qrData, solicitudes, setSelectedSolicitud, setShowQrScanner, fetchSolicitudById, escuelaSeleccionada);
+    } else {
+      // Si estamos en el portal principal, usamos la función general
+      handleQrScan(qrData, solicitudes, setSelectedSolicitud, setShowQrScanner, fetchSolicitudById);
     }
   };
   
-  
   const fetchSolicitudById = async (id) => {
     try {
-      const response = await authService.api.get(`/admin/solicitud/${id}`);
-      if (response.data) {
-        setSelectedSolicitud(response.data);
-        setShowQrScanner(false);
-      }
+        const response = await authService.api.get(`/admin/solicitud/${id}`);
+        if (response && response.data) {
+            return response.data; // Asegúrate de que esto devuelva la data correcta
+        }
     } catch (error) {
       console.error('Error al obtener solicitud:', error);
       toast.error('Solicitud no encontrada');
@@ -186,13 +147,21 @@ const AdminSolicitudesInscripcion = () => {
         }
       }
       
+      // Crear un array de niños con todos los datos requeridos
+      /*const ninosConDatos = selectedSolicitud.ninos.map((nino, index) => ({
+        ...nino,
+        precio: precios[index]?.precio || 0, // Asignar el precio correspondiente
+        esUniforme: precios[index]?.esUniforme || false // Asignar si incluye uniforme
+      }));
+      console.log('Datos de niños a enviar:', ninosConDatos);*/
       const response = await authService.api.put(
         `/admin/solicitud/${selectedSolicitud._id}`,
         {
           estado,
           comentarios,
           preciosPorNino: precios,
-          precioTotal: calcularPrecioTotal()
+          precioTotal: calcularPrecioTotal(),
+          //ninos: ninosConDatos // Incluir los datos de los niños
         }
       );
       
@@ -426,7 +395,7 @@ const AdminSolicitudesInscripcion = () => {
       {/* Modal de Escáner QR */}
       {showQrScanner && (
         <QRScanner 
-          onScanSuccess={handleQrScan} 
+          onScanSuccess={handleQrScanWrapper} 
           onClose={() => setShowQrScanner(false)} 
         />
       )}

@@ -23,7 +23,10 @@ const EscuelaForm = ({ escuela, onSave, onCancel }) => {
         error: '#EF4444',
         exito: '#10B981',
         advertencia: '#F59E0B',
-        info: '#3B82F6'
+        info: '#3B82F6',
+        titulos: '#1F2937',
+        subtitulos: '#4B5563',
+        textoElementos: '#6B7280'
       },
       tipografia: {
         fuente: "'Roboto', sans-serif",

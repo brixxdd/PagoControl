@@ -490,15 +490,6 @@ const App = () => {
                                   } 
                                 />
 
-                                <Route 
-                                  path="/admin-solicitudes/escuela/:escuelaId" 
-                                  element={
-                                    isAuthenticated && isAdmin 
-                                      ? <AdminSolicitudesInscripcion /> 
-                                      : <Navigate to="/signin" />
-                                  } 
-                                />
-
                                 <Route path="*" element={<Navigate to="/signin" />} />
                               </Routes>
                               

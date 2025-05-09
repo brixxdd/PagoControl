@@ -23,7 +23,10 @@ const escuelaSchema = new mongoose.Schema({
       error: { type: String, default: '#EF4444' },
       exito: { type: String, default: '#10B981' },
       advertencia: { type: String, default: '#F59E0B' },
-      info: { type: String, default: '#3B82F6' }
+      info: { type: String, default: '#3B82F6' },
+      titulos: { type: String, default: '#1F2937' },
+      subtitulos: { type: String, default: '#4B5563' },
+      textoElementos: { type: String, default: '#6B7280' }
     },
     tipografia: {
       fuente: { type: String, default: "'Roboto', sans-serif" },

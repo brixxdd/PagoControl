@@ -52,7 +52,7 @@ const EscuelaDashboard = ({ escuela }) => {
     
     return (
       <button
-        className={`text-white font-medium rounded-escuela-button shadow-escuela-button ${variantClass} ${className}`}
+        className={`text-escuela-text-elementos font-medium rounded-escuela-button shadow-escuela-button ${variantClass} ${className}`}
         {...props}
       >
         {children}
@@ -77,8 +77,8 @@ const EscuelaDashboard = ({ escuela }) => {
       <div className="flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
         <div className="text-escuela-primary text-xl mt-1">{icon}</div>
         <div>
-          <h4 className="font-medium text-escuela-text">{title}</h4>
-          <div className="text-sm text-gray-600 dark:text-gray-400">{children}</div>
+          <h4 className="font-medium text-escuela-text-subtitulos">{title}</h4>
+          <div className="text-sm text-escuela-text dark:text-gray-400">{children}</div>
         </div>
       </div>
     );
@@ -91,7 +91,7 @@ const EscuelaDashboard = ({ escuela }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-2xl font-bold mb-6 text-escuela-text font-escuela-body">
+        <h2 className="text-2xl font-bold mb-6 text-escuela-primary font-escuela-body">
           Bienvenido al Portal de {escuela.nombre}
         </h2>
         <header>
@@ -111,14 +111,14 @@ const EscuelaDashboard = ({ escuela }) => {
               transition-all duration-200
             "
           >
-            Ir al Dashboard
+            Ir al Dashboard principal
           </Link>
         </div>
         </header>
         
         {/* Información importante - NUEVA SECCIÓN */}
         <Card className="mb-8">
-          <h3 className="text-xl font-semibold mb-4 text-escuela-primary font-escuela-title">
+          <h3 className="text-xl font-semibold mb-4 text-escuela-text-titulos font-escuela-title">
             Información Importante
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -167,54 +167,63 @@ const EscuelaDashboard = ({ escuela }) => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
-            <h3 className="text-lg font-semibold mb-3 text-escuela-primary font-escuela-title">
+            <h3 className="text-lg font-semibold mb-3 text-escuela-text-titulos font-escuela-title">
               Próximos Eventos
             </h3>
-            <ul className="space-y-2 text-escuela-text">
-              <li className="flex justify-between">
-                <span>Reunión de padres</span>
-                <span>26/Oct</span>
-              </li>
-              <li className="flex justify-between">
-                <span>Torneo deportivo</span>
-                <span>05/Nov</span>
-              </li>
-              <li className="flex justify-between">
-                <span>Evaluación bimestral</span>
-                <span>15/Nov</span>
-              </li>
-            </ul>
+            
+              <ul className="space-y-2 text-escuela-text">
+                <div className="p-2 rounded bg-gray-400 bg-opacity-10">
+                  <li className="flex justify-between">
+                    <span>Reunión de padres</span>
+                    <span>26/Oct</span>
+                  </li>
+                </div>
+                <div className="p-2 rounded bg-gray-400 bg-opacity-10">
+                  <li className="flex justify-between">
+                    <span>Torneo deportivo</span>
+                    <span>05/Nov</span>
+                  </li>
+                </div>
+                <div className="p-2 rounded bg-gray-400 bg-opacity-10">
+                  <li className="flex justify-between">
+                    <span>Evaluación bimestral</span>
+                    <span>15/Nov</span>
+                  </li>
+                </div>
+              </ul>
+            
+            
             <div className="mt-4">
               <Button variant="primary">Ver todos</Button>
             </div>
           </Card>
           
           <Card>
-            <h3 className="text-lg font-semibold mb-3 text-escuela-secondary font-escuela-title">
+            <h3 className="text-lg font-semibold mb-3 text-escuela-text-titulos font-escuela-title">
               Pagos Pendientes
             </h3>
             <div className="space-y-2">
-              <div className="p-2 rounded bg-escuela-warning bg-opacity-10">
+              <div className="p-2 rounded bg-gray-400 bg-opacity-10">
                 <p className="text-escuela-text">Cuota mensual: {new Date().toLocaleDateString('es', { month: 'long', year: 'numeric' })}</p>
                 <p className="text-sm opacity-75">Vence: {fechasPago.primerPeriodo.split(' ')[0]} de {fechasPago.primerPeriodo.split(' ').slice(2).join(' ')}</p>
               </div>
-              <div className="p-2 rounded bg-escuela-warning bg-opacity-10">
+              <div className="p-2 rounded bg-gray-400 bg-opacity-10">
                 <p className="text-escuela-text">Uniforme (por única vez)</p>
                 <p className="text-sm opacity-75">Vence: {fechasPago.segundoPeriodo.split(' ')[0]} de {fechasPago.segundoPeriodo.split(' ').slice(2).join(' ')}</p>
               </div>
             </div>
             <div className="mt-4">
-              <Button variant="warning">Realizar pago</Button>
+              <Button variant="primary">Realizar pago</Button>
             </div>
           </Card>
           
           <Card>
-            <h3 className="text-lg font-semibold mb-3 text-escuela-success font-escuela-title">
+            <h3 className="text-lg font-semibold mb-3 text-escuela-text-titulos font-escuela-title">
               Acciones Rápidas
             </h3>
             <div className="space-y-3">
-              <Button variant="secondary" className="w-full">Registro de jugadores</Button>
-              <Button variant="success" className="w-full">Consultar calificaciones</Button>
+              <Button variant="info" className="w-full">Registro de jugadores</Button>
+              <Button variant="secondary" className="w-full">Consultar calificaciones</Button>
               <Button variant="info" className="w-full">Soporte técnico</Button>
             </div>
           </Card>
@@ -222,18 +231,18 @@ const EscuelaDashboard = ({ escuela }) => {
         
         <div className="mt-8">
           <Card>
-            <h3 className="text-xl font-semibold mb-4 text-escuela-primary font-escuela-title">
+            <h3 className="text-xl font-semibold mb-4 text-escuela-text-titulos font-escuela-title">
               Información Institucional
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="text-lg font-medium mb-2 text-escuela-text">Misión</h4>
+                <h4 className="text-lg font-medium mb-2 text-escuela-text-subtitulos">Misión</h4>
                 <p className="text-gray-600 dark:text-gray-400">
                   {escuela.mision}
                 </p>
               </div>
               <div>
-                <h4 className="text-lg font-medium mb-2 text-escuela-text">Visión</h4>
+                <h4 className="text-lg font-medium mb-2 text-escuela-text-subtitulos">Visión</h4>
                 <p className="text-gray-600 dark:text-gray-400">
                   {escuela.vision}
                 </p>

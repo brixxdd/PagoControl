@@ -170,7 +170,7 @@ const QRScanner = ({ onScanSuccess, onClose }) => {
         }
         
         // Notificar éxito solo una vez
-        alertaExito('Código QR escaneado correctamente');
+        alertaExito('Código QR desencriptado correctamente');
         
         // Llamar al callback con los datos
         setTimeout(() => {

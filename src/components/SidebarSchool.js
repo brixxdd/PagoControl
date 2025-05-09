@@ -104,6 +104,20 @@ const SidebarSchool = () => {
             </div>
             <span className="font-medium">Registro de Jugadores</span>
           </Link>
+
+          {/* Enlace a las solicitudes del tutor */}
+          <Link 
+            to={`/escuela/${escuelaId}/solicitudes-escuela`}
+            className={linkClasses(`/escuela/${escuelaId}/solicitudes-escuela`)} 
+            onClick={() => setIsOpen(false)}
+          >
+            <div className={`${isActive(`/escuela/${escuelaId}/solicitudes-escuela`) 
+              ? `p-1 rounded-full` 
+              : "p-1 rounded-full transition-all duration-300 group-hover:bg-white/20"}`}>
+              <FaFileUpload className={iconClasses} />
+            </div>
+            <span className="font-medium">Solicitudes</span>
+          </Link>
         </nav>
       </div>
     </>

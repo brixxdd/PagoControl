@@ -2,16 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { authService } from '../services/authService';
 import { toast } from 'react-toastify';
 import { FaQrcode, FaEye, FaClock, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { useParams } from 'react-router-dom';
+import { useTheme } from '../contexts/ThemeContext';
+import { getCurrentThemeStyles } from '../themes/themeConfig';
+import './common/common.css'
+
 
 const SolicitudesHistorial = () => {
   const [solicitudes, setSolicitudes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSolicitud, setSelectedSolicitud] = useState(null);
+  const { escuelaId } = useParams();
   
+  // Obtener el tema actual
+  const { currentTheme } = useTheme();
+  const themeStyles = getCurrentThemeStyles(currentTheme);
+
   useEffect(() => {
     const fetchSolicitudes = async () => {
       try {
-        const response = await authService.api.get('/auth/mis-solicitudes-inscripcion');
+        const endpoint = escuelaId 
+          ? `/auth/mis-solicitudes-inscripcion/escuela/${escuelaId}`
+          : '/auth/mis-solicitudes-inscripcion';
+
+        const response = await authService.api.get(endpoint);
         setSolicitudes(response.data);
       } catch (error) {
         console.error('Error al obtener solicitudes:', error);
@@ -22,7 +36,7 @@ const SolicitudesHistorial = () => {
     };
     
     fetchSolicitudes();
-  }, []);
+  }, [escuelaId]);
   
   const getStatusIcon = (estado) => {
     switch (estado) {
@@ -43,32 +57,30 @@ const SolicitudesHistorial = () => {
   };
   
   return (
-    <div className="min-h-screen p-4 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 
-                    dark:from-blue-900 dark:via-purple-900 dark:to-pink-900">
+    /*    <div className={`min-h-screen p-4 bg-image-class ${themeStyles.background} `}>*/
+    <div className={`min-h-screen p-4 ${themeStyles.background} `}>
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">
+        <h1 className={`text-3xl font-bold ${themeStyles.text} mb-8`}>
           Historial de Solicitudes de Inscripción
         </h1>
         
         {loading ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
+          <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center`}>
             <div className="inline-block w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Cargando solicitudes...</p>
+            <p className={`text-gray-600 dark:text-gray-400`}>Cargando solicitudes...</p>
           </div>
         ) : solicitudes.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
-            <p className="text-gray-600 dark:text-gray-400">
-              No tienes solicitudes de inscripción en tu historial.
-            </p>
+          <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center`}>
+            <p className={`text-gray-600 dark:text-gray-400`}>No hay solicitudes disponibles.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {solicitudes.map(solicitud => (
               <div 
                 key={solicitud._id} 
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
+                className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden ${themeStyles.borderColor}`}
               >
-                <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-4 text-white">
+                <div className={`bg-gradient-to-r ${themeStyles.gradient} p-4 text-white`}>
                   <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-2">
                       {solicitud.escuelaId?.logoUrl && (
@@ -124,7 +136,7 @@ const SolicitudesHistorial = () => {
                   <div className="flex justify-between">
                     <button
                       onClick={() => setSelectedSolicitud(solicitud)}
-                      className="flex items-center space-x-1 text-blue-500 hover:text-blue-700"
+                      className={`flex items-center space-x-1 ${themeStyles.text} hover:text-blue-700`}
                     >
                       <FaEye />
                       <span>Ver detalles</span>
@@ -132,8 +144,53 @@ const SolicitudesHistorial = () => {
                     
                     {solicitud.codigoQR && (
                       <button
-                        onClick={() => window.open(solicitud.codigoQR, '_blank')}
-                        className="flex items-center space-x-1 text-purple-500 hover:text-purple-700"
+                        onClick={() => {
+                          const qrImage = solicitud.codigoQR;
+                          const newWindow = window.open('', '_blank');
+                          newWindow.document.write(`
+                            <html>
+                              <head>
+                                <title>Código QR</title>
+                                <style>
+                                  body {
+                                    display: flex;
+                                    flex-direction: column;
+                                    align-items: center;
+                                    justify-content: center;
+                                    height: 100vh;
+                                    background-color: #f9f9f9;
+                                    font-family: Arial, sans-serif;
+                                  }
+                                  img {
+                                    max-width: 300px;
+                                    margin-bottom: 20px;
+                                  }
+                                  button {
+                                    padding: 10px 20px;
+                                    background-color: #4CAF50;
+                                    color: white;
+                                    border: none;
+                                    border-radius: 5px;
+                                    cursor: pointer;
+                                    font-size: 16px;
+                                  }
+                                  button:hover {
+                                    background-color: #45a049;
+                                  }
+                                </style>
+                              </head>
+                              <body>
+                                <h2>Código QR</h2>
+                                <img src="${qrImage}" alt="Código QR" />
+                                <a href="${qrImage}" download="codigo-qr.png">
+                                  <button>Descargar QR</button>
+                                </a>
+                              </body>
+                            </html>
+                          `);
+                          newWindow.document.close();
+                        }}
+                        className={`flex items-center space-x-1 ${themeStyles.text} hover:text-purple-700`}
                       >
                         <FaQrcode />
                         <span>Ver QR</span>
@@ -150,7 +207,7 @@ const SolicitudesHistorial = () => {
         {selectedSolicitud && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-6 text-white">
+              <div className={`bg-gradient-to-r ${themeStyles.gradient} p-6 text-white`}>
                 <div className="flex justify-between items-center">
                   <h3 className="text-xl font-bold">Detalles de la Solicitud</h3>
                   <button 

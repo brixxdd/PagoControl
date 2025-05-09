@@ -73,8 +73,12 @@ export const themeGradients = {
     border:  'border-escuela-border',
     // Color de texto
     text:    'text-escuela-text',
+    textSubtitulos:    'text-escuela-text-subtitulos',
+    textTitulos:    'text-escuela-text-titulos',
+    textElementos:    'text-escuela-text-elementos',
     // Fondo (modo claro y modo oscuro)
-    background: 'bg-escuela-bg dark:bg-escuela-bg-secondary',
+    //background: 'bg-escuela-bg dark:bg-escuela-bg-secondary',
+    background: 'bg-gradient-to-br from-escuela-bg to-escuela-bg-secondary',
     // Gradiente para botones de "eliminar"
     deleteGradient: 'from-escuela-error to-escuela-error',
     deleteHover:    'hover:from-escuela-error hover:to-escuela-error',

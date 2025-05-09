@@ -129,6 +129,7 @@ export const useEscuelaTema = (tema) => {
         '--color-primario', '--color-secundario', '--color-texto',
         '--color-fondo', '--color-fondo-secundario', '--color-borde',
         '--color-error', '--color-exito', '--color-advertencia', '--color-info',
+        '--color-subtitulos', '--color-titulos', '--color-texto-elementos', 
         '--font-family', '--font-titles', '--font-size-base',
         '--button-radius', '--button-padding', '--button-shadow',
         '--card-radius', '--card-shadow', '--card-padding',

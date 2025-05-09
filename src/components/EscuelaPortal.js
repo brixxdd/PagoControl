@@ -9,11 +9,16 @@ import EscuelaDashboard from './EscuelaDashboard';
 import { EscuelaTemaProvider } from '../contexts/EscuelaTemaContext';
 import AdminSolicitudesInscripcion from './AdminSolicitudesInscripcion';
 import AdminSidebarSchool from './AdminSidebarSchool';
+import SolicitudesHistorial from './SolicitudesHistorial';
+import { getCurrentThemeStyles } from '../themes/themeConfig';
+import './common/common.css'
+
 
 
 const EscuelaPortal = ({ isAuthenticated, isAdmin }) => {
   const { escuelaId } = useParams();
   const navigate = useNavigate();
+  const themeStyles = getCurrentThemeStyles('escuela');
   const [escuela, setEscuela] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -97,84 +102,88 @@ const EscuelaPortal = ({ isAuthenticated, isAdmin }) => {
 
   return (
     <EscuelaTemaProvider tema={escuela.tema}>
-      <div className="min-h-screen flex flex-col" 
-      style={{ 
-        backgroundColor: `var(--color-fondo, #F9FAFB)`,
-        backgroundImage: escuela.tema?.imagenes?.fondo ? `var(--bg-image)` : 'none',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        isolation: "isolate"
-      }}>
-        
-        {/*isAuthenticated && !isAdmin && <SidebarSchool />*/}
-        {isAuthenticated && (
-          isAdmin
-            ? <AdminSidebarSchool />
-            : <SidebarSchool />
-        )}
-
-        {/* Cabecera personalizada para la escuela */}
-        <header 
-          className="shadow-md p-4"
-          style={getHeaderStyles()}
-        >
-          <div className="container mx-auto flex items-center gap-4">
-            {escuela.logoUrl && (
-              <img 
-                src={escuela.logoUrl} 
-                alt={escuela.nombre}
-                className="h-10 object-contain"
-              />
-            )}
-            <h1 className="text-xl font-bold text-white">
-              {escuela.nombre}
-            </h1>
-          </div>
-        </header>
-        
-        {/* Contenido principal - Aquí irán las rutas específicas */}
-        <div className="flex-1">
-          <Routes>
-            <Route path="/" element={
-              isAuthenticated ? 
-                <Navigate to={`/escuela/${escuelaId}/dashboard`} replace /> : 
-                <Navigate to={`/escuela/${escuelaId}/signin`} replace />
-            } />
-            <Route path="/dashboard" element={
-              isAuthenticated ? 
-                <EscuelaDashboard escuela={escuela} /> : 
-                <Navigate to={`/escuela/${escuelaId}/signin`} replace />
-            } />
-            <Route path="/registro-jugadores" element={
-              isAuthenticated ? 
-                <RegistroNino /> : 
-                <Navigate to={`/escuela/${escuelaId}/signin`} replace />
-            } />
-            {/*Veremos si jala */}
-            <Route 
-              path="/admin-solicitudes-escuela" 
-              element={
-                isAuthenticated && isAdmin 
-                  ? <AdminSolicitudesInscripcion /> 
-                  : <Navigate to={`/escuela/${escuelaId}/signin`} replace />
-              } 
-            />
-            
-            <Route path="/signin" element={<SignIn escuelaPortal={true} escuela={escuela} />} />
-            <Route path="*" element={<Navigate to={`/escuela/${escuelaId}`} replace />} />
-          </Routes>
-        </div>
-        
-        {/* Footer con información de la escuela */}
-        <footer 
-          className="p-4 text-center text-sm"
-          style={getFooterStyles()}
-        >
-          <p>&copy; {new Date().getFullYear()} {escuela.nombre}</p>
-          {escuela.direccion && (
-            <p className="mt-1 text-xs opacity-75">{escuela.direccion}</p>
+      <div className={`min-h-screen flex flex-col ${escuela.tema?.imagenes?.fondo ? 'bg-image-class' : themeStyles.background}`}>
+        <div className="content">
+          {/*isAuthenticated && !isAdmin && <SidebarSchool />*/}
+          {isAuthenticated && (
+            isAdmin
+              ? <AdminSidebarSchool />
+              : <SidebarSchool />
           )}
-        </footer>
+
+          {/* Cabecera personalizada para la escuela */}
+          <header 
+            className="shadow-md p-4"
+            style={getHeaderStyles()}
+          >
+            <div className="container mx-auto flex items-center gap-4">
+              {escuela.logoUrl && (
+                <img 
+                  src={escuela.logoUrl} 
+                  alt={escuela.nombre}
+                  className="h-10 object-contain"
+                />
+              )}
+              <h1 className="text-xl font-bold text-white">
+                {escuela.nombre}
+              </h1>
+            </div>
+          </header>
+          
+          {/* Contenido principal - Aquí irán las rutas específicas */}
+          <div className="flex-1">
+            <Routes>
+              <Route path="/" element={
+                isAuthenticated ? 
+                  <Navigate to={`/escuela/${escuelaId}/dashboard`} replace /> : 
+                  <Navigate to={`/escuela/${escuelaId}/signin`} replace />
+              } />
+              <Route path="/dashboard" element={
+                isAuthenticated ? 
+                  <EscuelaDashboard escuela={escuela} /> : 
+                  <Navigate to={`/escuela/${escuelaId}/signin`} replace />
+              } />
+              <Route path="/registro-jugadores" element={
+                isAuthenticated ? 
+                  <RegistroNino /> : 
+                  <Navigate to={`/escuela/${escuelaId}/signin`} replace />
+              } />
+              <Route 
+                path="/admin-solicitudes-escuela" 
+                element={
+                  isAuthenticated && isAdmin 
+                    ? <AdminSolicitudesInscripcion /> 
+                    : <Navigate to={`/escuela/${escuelaId}/signin`} replace />
+                } 
+              />
+              {/*Veremos si jala */}
+              <Route 
+                path="/solicitudes-escuela" 
+                element={
+                  isAuthenticated && !isAdmin 
+                    ? <SolicitudesHistorial/> 
+                    : <Navigate to={`/escuela/${escuelaId}/signin`} replace />
+                } 
+              />
+
+              <Route path="/signin" element={<SignIn escuelaPortal={true} escuela={escuela} />} />
+              <Route path="*" element={<Navigate to={`/escuela/${escuelaId}`} replace />} />
+            </Routes>
+          </div>
+          
+          {/* Footer con información de la escuela */}
+          {isAuthenticated && (
+            <footer 
+              className="p-4 text-center text-sm"
+              style={getFooterStyles()}
+            >
+              <p>&copy; {new Date().getFullYear()} {escuela.nombre}</p>
+              {escuela.direccion && (
+                <p className="mt-1 text-xs opacity-75">{escuela.direccion}</p>
+              )}
+            </footer>
+          )}
+        </div>
       </div>
     </EscuelaTemaProvider>
   );

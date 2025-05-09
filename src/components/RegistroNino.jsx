@@ -6,6 +6,8 @@ import { toast } from 'react-toastify';
 import { TIPOS_SANGRE, getEstados, getMunicipios } from '../data/ubicaciones';
 import { useParams } from 'react-router-dom';
 import { authService } from '../services/authService';
+import { getCurrentThemeStyles } from '../themes/themeConfig';
+
 
 //Componente para registrar un jugador
 const RegistroNino = () => {
@@ -14,6 +16,7 @@ const RegistroNino = () => {
     const secundario = 'escuela-secondary' || '#8B5CF6';
     return `from-${primario} to-${secundario}`;
   };
+  const themeStyles = getCurrentThemeStyles('escuela');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -276,8 +279,7 @@ const RegistroNino = () => {
   };
 
   return (
-    <div className="min-h-screen p-4 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 
-                    dark:from-blue-900 dark:via-purple-900 dark:to-pink-900">
+    <div className={`min-h-screen p-4 ${themeStyles.background}`}>
       {/* Header y Botón de Agregar */}
       <div className="max-w-7xl mx-auto mb-8 flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-800 dark:text-white">

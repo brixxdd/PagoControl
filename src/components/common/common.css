@@ -1,0 +1,23 @@
+.bg-image-class {
+    position: relative;
+    background-image: var(--bg-image);
+    background-size: cover;
+    background-position: center;
+}
+
+.bg-image-class::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.1); /* Color negro con 50% de opacidad */
+    z-index: 0; /* Asegúrate de que esté detrás del contenido */
+}
+
+/* Asegúrate de que el contenido tenga un z-index mayor */
+.content {
+    position: relative; /* Necesario para que el z-index funcione */
+    z-index: 1; /* Mayor que el pseudo-elemento */
+}

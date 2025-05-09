@@ -39,6 +39,9 @@ module.exports = {
         'escuela-warning': 'var(--color-advertencia, #F59E0B)',
         'escuela-info': 'var(--color-info, #3B82F6)',
         'escuela-gradient': 'var(--color-info, #3B82F6)',
+        'escuela-text-subtitulos': 'var(--color-subtitulos, #1c1c1c)',
+        'escuela-text-titulos': 'var(--color-titulos, #1c1c1c)',
+        'escuela-text-elementos': 'var(--color-texto-elementos, #1c1c1c)',
       },
       borderRadius: {
         'escuela-button': 'var(--button-radius, 0.375rem)',

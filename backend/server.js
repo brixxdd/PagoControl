@@ -1508,6 +1508,34 @@ app.get('/auth/mis-solicitudes-inscripcion', verifyToken, async (req, res) => {
   }
 });
 
+// Ruta para obtener solicitudes de inscripción del tutor de una escuela específica
+app.get('/auth/mis-solicitudes-inscripcion/escuela/:escuelaId', verifyToken, async (req, res) => {
+  try {
+    const { escuelaId } = req.params;
+    const tutorId = req.user.id;
+
+    const escuela = await Escuela.findOne({ identificador: escuelaId })
+    if (!escuela) {
+      throw { status: 404, message: `Escuela '${escuelaId}' no existe` };
+    }
+
+    const solicitudes = await SolicitudInscripcion.find({ 
+      tutorId, 
+      escuelaId: escuela._id
+    })
+    .populate('escuelaId', 'nombre identificador logoUrl')
+    .sort({ fechaSolicitud: -1 });
+
+    res.json(solicitudes);
+  } catch (error) {
+    console.error('Error al obtener solicitudes de inscripción por escuela:', error);
+    res.status(500).json({ 
+      message: 'Error al obtener solicitudes de inscripción', 
+      error: error.message 
+    });
+  }
+});
+
 // Ruta para obtener una solicitud específica (admin)
 app.get('/admin/solicitud/:id', verifyToken, async (req, res) => {
   try {
@@ -1540,36 +1568,51 @@ app.put('/admin/solicitud/:id', verifyToken, async (req, res) => {
     }
     
     const { id } = req.params;
-    const { estado, preciosPorNino, observaciones } = req.body;
+    const { estado, preciosPorNino, comentarios, precioTotal } = req.body;
     
     const solicitud = await SolicitudInscripcion.findById(id);
     if (!solicitud) {
       return res.status(404).json({ message: 'Solicitud no encontrada' });
     }
-    
     // Actualizar información de la solicitud
     solicitud.estado = estado;
     solicitud.preciosPorNino = preciosPorNino || [];
-    solicitud.observaciones = observaciones;
+    solicitud.observaciones = comentarios;
     solicitud.fechaRespuesta = new Date();
     
     // Calcular precio total
-    solicitud.precioTotal = preciosPorNino.reduce((total, item) => total + item.precio, 0);
-    
+    //solicitud.precioTotal = preciosPorNino.reduce((total, item) => total + item.precio, 0);
+    solicitud.precioTotal = precioTotal;
+
     // Si se aprueba, crear los registros de niños
     if (estado === 'aprobada') {
       for (let i = 0; i < solicitud.ninos.length; i++) {
         const ninoData = solicitud.ninos[i];
         const precioInfo = preciosPorNino.find(p => p.ninoIndex === i) || { precio: 0 };
-        
+        console.log('Nino extraido de la solicitud: ',ninoData)
         // Crear el niño en la base de datos
         const nuevoNino = new Nino({
           tutorId: solicitud.tutorId,
           escuelaId: solicitud.escuelaId,
           precio: precioInfo.precio,
-          ...ninoData
+          nombre: ninoData.nombre,
+          apellidoPaterno: ninoData.apellidoPaterno,
+          apellidoMaterno: ninoData.apellidoMaterno,
+          fechaNacimiento: ninoData.fechaNacimiento,
+          claveCURP: ninoData.claveCURP,
+          estado: ninoData.estado,
+          municipioResidencia: ninoData.municipioResidencia,
+          codigoPostal: ninoData.codigoPostal,
+          numeroCamiseta: ninoData.numeroCamiseta,
+          telefonos: ninoData.telefonos,
+          tipoSangre: ninoData.tipoSangre,
+          alergias: ninoData.alergias,
+          cirugias: ninoData.cirugias,
+          afecciones: ninoData.afecciones,
+          nombrePadres: ninoData.nombrePadres,
+          incluyeUniforme: ninoData.esUniforme // Asumiendo que este campo se envía correctamente
         });
-        
+        console.log('Nino a insertar: ',nuevoNino)
         const ninoGuardado = await nuevoNino.save();
         
         // Actualizar el ID en la solicitud
