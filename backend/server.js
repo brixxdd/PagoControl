@@ -82,7 +82,7 @@ app.use(cors({
     process.env.FRONTEND_URL,
     'https://pago-control.vercel.app',
     'https://pago-control-b9bkf73ku-brians-projects-12715d8a.vercel.app',
-    'http://localhost:3001'
+    'https://pagocontrol.onrender.com'
   ],
   credentials: true,
 }));
