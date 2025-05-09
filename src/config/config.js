@@ -1,8 +1,8 @@
 // Configuración centralizada para la aplicación
 
 // URLs base
-//export const BACKEND_URL = 'https://pagocontrol.onrender.com' || 'http://localhost:5000';
-export const BACKEND_URL = 'http://localhost:5000';
+export const BACKEND_URL = 'https://pagocontrol.onrender.com' || 'http://localhost:5000';
+//export const BACKEND_URL = 'http://localhost:5000';
 
 export const FRONTEND_URL = process.env.REACT_APP_FRONTEND_URL || 'http://localhost:3001';
 
