@@ -81,6 +81,7 @@ app.use(cors({
   origin: [
     process.env.FRONTEND_URL,
     'https://pago-control.vercel.app',
+    'https://pago-control-b9bkf73ku-brians-projects-12715d8a.vercel.app',
     'http://localhost:3001'
   ],
   credentials: true,
@@ -91,12 +92,16 @@ app.use((req, res, next) => {
   res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
   res.setHeader(
     'Content-Security-Policy',
+    "default-src 'self'; " +
     "frame-ancestors 'self' https://accounts.google.com https://*.google.com; " +
     "frame-src 'self' https://accounts.google.com https://*.google.com; " +
-    "script-src 'self' https://accounts.google.com https://*.googleusercontent.com 'unsafe-inline' 'unsafe-eval';"
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://www.gstatic.com https://*.googleusercontent.com; " +
+    "connect-src 'self' https://accounts.google.com https://*.google.com https://*.googleusercontent.com; " +
+    "img-src 'self' data: https:; " +
+    "style-src 'self' 'unsafe-inline';"
   );
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'ALLOWALL');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   console.log('Petición recibida:', {
